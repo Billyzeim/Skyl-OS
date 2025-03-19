@@ -1,6 +1,6 @@
 # Skyl-OS an experimental OS
 
-*Since [documentation](/docs/) exists the README file will not cover anything in depth*
+*Since [documentation](/docs/) exists the README file will not cover anything in depth. Also, note that since this a learning project for most of the contributors, the documentation shall generally be kept as detailed as possible.*
 
 ## Why Skyl-OS
 
