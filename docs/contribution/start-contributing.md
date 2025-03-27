@@ -63,7 +63,7 @@ Make sure commits have appropriately discriptive titles and discriptions.
 
 While developing your own features it is very important for other people to userstand how your code works.</br>
 
-## 1. Documentation Files
+### 1. Documentation Files
 
 Under [docs](docs) there should be a file stuctrue starting from more abstract structures of the project such as `kernel` or `bootloader`.</br>
 Under them there should lie folders for grouped parts of the project that handle common things like `terminal-graphics` or `process-handling` for the `kernel`.</br>
@@ -71,12 +71,12 @@ If further categorization is needed to provide clarity is should be pursued. Whe
 1. A general description of what the feature does and why it is needed (keep this one concise).
 2. A usage guide for different functions such as types and use cases (examples really make things more clear).
 3. A more detailed explaination of how and why the code works (techniques and algorithms used).
-4. Possible limitations and wornings about your code.
+4. Possible limitations and warnings about your code.</br>
 
 >[!TIP]
 >You are encouraged to link your code to help readers locate it.
 
-## 2. Comments
+### 2. Comments
 
 Please, please, please use comments inside your code to clarify functionality.</br>
 Documentation is usually not enough for developers to understand how your code will behave in certain contexts, thus leading them into taking a peek of your code.<br>
