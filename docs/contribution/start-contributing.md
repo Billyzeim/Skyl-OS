@@ -9,7 +9,7 @@ In this document I will hold your hand through the development environment set-u
 
 Docker will make sure all developers share the same version of the same tools installed on their machines. 
 Doing this is a good practice that ensures reproducability and consistency. [Here](https://docs.docker.com/get-started/get-docker/) is a downlaod link.
-It is also highly recommended that you work on a Linux machine, Debian sutis best.
+It is also highly recommended that you work on a Linux machine, Debian suits best.
 
 We will not conduct a thorough docker tutorial so you can feel free to mess arround with the docker [documentation](https://docs.docker.com/).
 
@@ -58,3 +58,32 @@ To switch between branched you can use the ```git checkout <branch-name>``` comm
 >Refer to git's documentation to learn how this works.
 
 Make sure commits have appropriately discriptive titles and discriptions.
+
+## Writing Documentation
+
+While developing your own features it is very important for other people to userstand how your code works.</br>
+
+## 1. Documentation Files
+
+Under [docs](docs) there should be a file stuctrue starting from more abstract structures of the project such as `kernel` or `bootloader`.</br>
+Under them there should lie folders for grouped parts of the project that handle common things like `terminal-graphics` or `process-handling` for the `kernel`.</br>
+If further categorization is needed to provide clarity is should be pursued. When an appropriate depth is reached there should be a `feature-name.md` file that contains the following information:</br>
+1. A general description of what the feature does and why it is needed (keep this one concise).
+2. A usage guide for different functions such as types and use cases (examples really make things more clear).
+3. A more detailed explaination of how and why the code works (techniques and algorithms used).
+4. Possible limitations and wornings about your code.
+
+>[!TIP]
+>You are encouraged to link your code to help readers locate it.
+
+## 2. Comments
+
+Please, please, please use comments inside your code to clarify functionality.</br>
+Documentation is usually not enough for developers to understand how your code will behave in certain contexts, thus leading them into taking a peek of your code.<br>
+Leaving comments behind will ceratinly make their job easier since certain syntaxes might resemble to sorcery!
+
+By now you should be ready to start contributing... maybe... I am not sure...</br>
+However this is why you are also encouraged to make changes to files like this one. </br>
+All the above apply!
+
+### **Happy Coding :)**
