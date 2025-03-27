@@ -5,7 +5,7 @@
 ## Why Skyl-OS
 
 Skyl-OS is intended to be an experimental operating system. Its main purpose is for a bunch of geeky and interested university students to learn how OS development works. 
-They say explaining something is the best way to understand how well you know it anyway; so what's a better way to learn something that to explain it to a C compiler?
+They say explaining something is the best way to understand how well you know it anyway; so what's a better way to learn something than to explain it to a C compiler?
 
 ## How to use
 

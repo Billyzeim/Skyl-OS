@@ -7,5 +7,6 @@ In this document I will hold your hand through the development environment set-u
 
 Docker will make sure all developers share the same version of the same tools installed on their machines. 
 Doing this is a good practice that ensures reproducability and consistency. [Here](https://docs.docker.com/get-started/get-docker/) is a downlaod link.
+It is also highly recommended that you work on a Linux machine, Debian sutis best.
 
 We will not conduct a thorough docker tutorial so you can feel free to mess arround with the docker [documentation](https://docs.docker.com/).
