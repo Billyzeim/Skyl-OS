@@ -15,15 +15,15 @@ We will not conduct a thorough docker tutorial so you can feel free to mess arro
 
 Before writing any code we need to make sure we have built our docker container. 
 You can use the following command to do so:
-'''
+```
 docker build -t skylos .
-'''
+```
 You will probably only need to use the above command again if the Dockerfile is subject to any changes.
 
 Now you can use the following command when you need to run your container image:
-'''
+```
 docker run --rm -it -v $(pwd):/os skylos
-'''
+```
 
-[!IMPORTANT]
-Make sure the docker use is evelated or that you use sudo for the above commands.
+> [!IMPORTANT]
+> Make sure the docker use is evelated or that you use sudo for the above commands.
