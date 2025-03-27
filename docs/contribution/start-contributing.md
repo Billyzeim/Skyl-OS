@@ -26,4 +26,4 @@ docker run --rm -it -v $(pwd):/os skylos
 ```
 
 > [!IMPORTANT]
-> Make sure the docker use is evelated or that you use sudo for the above commands.
+> Make sure the docker use is evelated or that you use `sudo` for the above commands.
