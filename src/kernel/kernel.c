@@ -1,9 +1,10 @@
 #include "../include/log.h"
 #include "../include/drivers/keyboard.h"
+#include "../include/dts/gdt.h"
 
 void kernel_main() {
     print("Kernel is running...\n");
-    
+    init_gdt(); // Initialize GDT
     char *vidptr = (char*)0xb8000; 	//video mem begins here.
 	unsigned int i = 0;
 	unsigned int j = 0;
@@ -17,7 +18,6 @@ void kernel_main() {
 		vidptr[j+1] = 0x07; 		
 		j = j + 2;
 	}
-
     while (1) {
         // Poll for keyboard input
         unsigned char scancode = read_keyboard();
@@ -27,7 +27,6 @@ void kernel_main() {
             if (ascii) {
                 const char str[2] = {ascii, '\0'};
                 print(str);
-                // print("\n");
             }
         }
     }

@@ -4,6 +4,8 @@
 #define KEYBOARD_STATUS_PORT 0x64
 
 // Interrupt handler for keyboard IRQ1
+// Interrupt serivice routine (ISR) for keyboard
+// This function is called when a keyboard interrupt occurs
 void keyboard_isr() {
     unsigned char scancode;
     

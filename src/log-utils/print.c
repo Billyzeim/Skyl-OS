@@ -30,3 +30,22 @@ void print_char(char c) {
         cursor_y++;
     }
 }
+
+void print_int(int num) {
+    char buffer[12]; // Enough to hold INT_MIN
+    int i = 0;
+
+    if (num < 0) {
+        print("-");
+        num = -num;
+    }
+
+    do {
+        buffer[i++] = (num % 10) + '0';
+        num /= 10;
+    } while (num > 0);
+
+    while (i > 0) {
+        print_char(buffer[--i]);
+    }
+}
