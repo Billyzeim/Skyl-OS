@@ -36,14 +36,14 @@ unsigned char read_keyboard() {
     return 0; // Should never get here
 }
 
-void idt_install() {
+void keyboard_idt_install() {
     // Install interrupt service routines (ISR) for IRQs (IRQ1 for keyboard)
-    set_idt_gate(33, (unsigned int)keyboard_isr); // IRQ1 is gate 33
+    set_keyboard_idt_gate(33, (unsigned int)keyboard_isr); // IRQ1 is gate 33
     // Enable the keyboard interrupt in the PIC (Programmable Interrupt Controller)
     enable_irq(1);
 }
 
-void set_idt_gate(unsigned char num, unsigned int base) {
+void set_keyboard_idt_gate(unsigned char num, unsigned int base) {
     // Set up an IDT entry with the base address of the ISR
     // This is a simplified example and would require more implementation to fully set up the IDT
 }
