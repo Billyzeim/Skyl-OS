@@ -1,32 +1,94 @@
-#include "../../include/pic/pic.h" 
-#include "../../include/types/ints.h"
+#include "../../include/pic/pic.h"
 
-extern void outba();
-// PIC Initialization
-void pic_init() {
-    // Start the initialization sequence for both PICs (ICW1)
-    outb(PIC1_CMD, ICW1_INIT | ICW1_ICW4);  // Tell PIC1 to start initialization
-    outb(PIC2_CMD, ICW1_INIT | ICW1_ICW4);  // Tell PIC2 to start initialization
+void PIC_sendEOI(uint8_t irq)
+{
+	if(irq >= 8)
+		outb(PIC2_COMMAND,PIC_EOI);
+	
+	outb(PIC1_COMMAND,PIC_EOI);
+}
+   /*
+   arguments:
+       offset1 - vector offset for master PIC
+           vectors on the master become offset1..offset1+7
+       offset2 - same for slave PIC: offset2..offset2+7
+   */
+   void PIC_remap(int offset1, int offset2)
+   {
+       outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);  // starts the initialization sequence (in cascade mode)
+       io_wait();
+       outb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
+       io_wait();
+       outb(PIC1_DATA, offset1);                 // ICW2: Master PIC vector offset
+       io_wait();
+       outb(PIC2_DATA, offset2);                 // ICW2: Slave PIC vector offset
+       io_wait();
+       outb(PIC1_DATA, 4);                       // ICW3: tell Master PIC that there is a slave PIC at IRQ2 (0000 0100)
+       io_wait();
+       outb(PIC2_DATA, 2);                       // ICW3: tell Slave PIC its cascade identity (0000 0010)
+       io_wait();
+       
+       outb(PIC1_DATA, ICW4_8086);               // ICW4: have the PICs use 8086 mode (and not 8080 mode)
+       io_wait();
+       outb(PIC2_DATA, ICW4_8086);
+       io_wait();
+   
+       // Unmask both PICs.
+       outb(PIC1_DATA, 0);
+       outb(PIC2_DATA, 0);
+   }
 
-    // Set the vector offsets for the PICs (ICW2)
-    outb(PIC1_DATA, 0x20);  // Master PIC will use interrupt vectors 0x20-0x27 (IRQ0-IRQ7)
-    outb(PIC2_DATA, 0x28);  // Slave PIC will use interrupt vectors 0x28-0x2F (IRQ8-IRQ15)
-
-    // Tell PIC1 about PIC2 (ICW3)
-    outb(PIC1_DATA, 0x04);
+   void pic_disable(void) {
+    outb(PIC1_DATA, 0xff);
+    outb(PIC2_DATA, 0xff);
 }
 
-void pic_send_eoi(uint8_t irq)
-{
-    if (irq >= 8) {
-        outb(PIC2_CMD, 0x20);  // Send EOI to Slave PIC
+void IRQ_set_mask(uint8_t IRQline) {
+    uint16_t port;
+    uint8_t value;
+
+    if(IRQline < 8) {
+        port = PIC1_DATA;
+    } else {
+        port = PIC2_DATA;
+        IRQline -= 8;
     }
-    outb(PIC1_CMD, 0x20);  // Send EOI to Master PIC
+    value = inb(port) | (1 << IRQline);
+    outb(port, value);        
 }
 
-void outb(uint16_t port, uint8_t data)
+void IRQ_clear_mask(uint8_t IRQline) {
+    uint16_t port;
+    uint8_t value;
+
+    if(IRQline < 8) {
+        port = PIC1_DATA;
+    } else {
+        port = PIC2_DATA;
+        IRQline -= 8;
+    }
+    value = inb(port) & ~(1 << IRQline);
+    outb(port, value);        
+}
+
+/* Helper func */
+static uint16_t __pic_get_irq_reg(int ocw3)
 {
-    uint16_t* first = (uint16_t*)port;
-    uint8_t* second = (uint8_t*)data;
-    outba();
+    /* OCW3 to PIC CMD to get the register values.  PIC2 is chained, and
+     * represents IRQs 8-15.  PIC1 is IRQs 0-7, with 2 being the chain */
+    outb(PIC1_COMMAND, ocw3);
+    outb(PIC2_COMMAND, ocw3);
+    return (inb(PIC2_COMMAND) << 8) | inb(PIC1_COMMAND);
+}
+
+/* Returns the combined value of the cascaded PICs irq request register */
+uint16_t pic_get_irr(void)
+{
+    return __pic_get_irq_reg(PIC_READ_IRR);
+}
+
+/* Returns the combined value of the cascaded PICs in-service register */
+uint16_t pic_get_isr(void)
+{
+    return __pic_get_irq_reg(PIC_READ_ISR);
 }

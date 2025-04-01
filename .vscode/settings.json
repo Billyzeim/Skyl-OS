@@ -2,6 +2,7 @@
     "files.associations": {
         "stdio.h": "c",
         "keyboard.h": "c",
-        "ints.h": "c"
+        "ints.h": "c",
+        "cstdint": "c"
     }
 }

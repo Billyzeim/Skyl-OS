@@ -1,27 +1,36 @@
 #ifndef IDT_H
 #define IDT_H
+#include "../types/defs.h"
 
-#include "../types/ints.h"
+typedef struct {
+	uint16_t    isr_low;      // The lower 16 bits of the ISR's address
+	uint16_t    kernel_cs;    // The GDT segment selector that the CPU will load into CS before calling the ISR
+	uint8_t     reserved;     // Set to zero
+	uint8_t     attributes;   // Type and attributes; see the IDT page
+	uint16_t    isr_high;     // The higher 16 bits of the ISR's address
+} __attribute__((packed)) idt_entry_t;
 
-// IDT entry structure
-struct IDTEntry {
-    uint16_t offset_low;   // Lower 16 bits of the ISR address
-    uint16_t selector;     // Code segment selector
-    uint8_t  zero;         // Reserved, set to 0
-    uint8_t  type_attr;    // Type and attributes
-    uint16_t offset_high;  // Higher 16 bits of the ISR address
-} __attribute__((packed));
+typedef struct {
+	uint16_t	limit;
+	uint32_t	base;
+} __attribute__((packed)) idtr_t;
 
-// IDT pointer structure
-struct IDTPointer {
-    uint16_t limit;  // Size of the IDT
-    uint32_t base;   // Address of the IDT
-} __attribute__((packed));
+static idtr_t idtr;
 
-#define IDT_SIZE 256
+__attribute__((noreturn))
+void exception_handler(void);
+void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags);
 
-// Functions
-void idt_install();
-void set_idt_gate(int n, uint32_t handler);
+typedef uint8_t bool;
+
+#define IDT_MAX_DESCRIPTORS 256
+
+static bool vectors[IDT_MAX_DESCRIPTORS];
+void idt_init(void);
+extern void* isr_stub_table[];
+
+#define uintptr_t (unsigned int *)
+#define true 1
+#define false 0
 
 #endif

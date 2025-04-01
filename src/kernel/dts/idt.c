@@ -2,31 +2,32 @@
 #include "../../include/isr/isr.h"
 #include "../../include/log.h"
 
-struct IDTEntry idt[IDT_SIZE];
-struct IDTPointer idt_ptr;
-
-extern void idt_load();  // Defined in idt_load.asm
-
-// Function to set an entry in the IDT
-void set_idt_gate(int n, uint32_t handler) {
-    idt[n].offset_low = handler & 0xFFFF;
-    idt[n].selector = 0x08;   // Kernel code segment
-    idt[n].zero = 0;
-    idt[n].type_attr = 0x8E;  // 32-bit interrupt gate
-    idt[n].offset_high = (handler >> 16) & 0xFFFF;
+void exception_handler() {
+    __asm__ volatile ("cli; hlt"); // Completely hangs the computer
 }
 
-// Function to initialize and load the IDT
-void idt_install() {
-    idt_ptr.limit = (sizeof(struct IDTEntry) * IDT_SIZE) - 1;
-    idt_ptr.base = (uint32_t) &idt;
+__attribute__((aligned(0x10))) 
+static idt_entry_t idt[256]; // Create an array of IDT entries; aligned for performance
 
-    // Clear IDT entries
-    for (int i = 0; i < IDT_SIZE; i++) {
-        set_idt_gate(i, (uint32_t)isr_default);  // Default ISR
+void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
+    idt_entry_t* descriptor = &idt[vector];
+
+    descriptor->isr_low        = (uint32_t)isr & 0xFFFF;
+    descriptor->kernel_cs      = 0x08; // this value can be whatever offset your kernel code selector is in your GDT
+    descriptor->attributes     = flags;
+    descriptor->isr_high       = (uint32_t)isr >> 16;
+    descriptor->reserved       = 0;
+}
+
+void idt_init() {
+    idtr.base = (uint32_t*)&idt[0];
+    idtr.limit = (uint16_t)sizeof(idt_entry_t) * IDT_MAX_DESCRIPTORS - 1;
+
+    for (uint8_t vector = 0; vector < 32; vector++) {
+        idt_set_descriptor(vector, isr_stub_table[vector], 0x8E);
+        vectors[vector] = true;
     }
-    // set_idt_gate(0x64, (uint32_t)isr_default);
 
-    idt_load();  // Load the IDT using the assembly function
-    print("IDT loaded\n");
+    __asm__ volatile ("lidt %0" : : "m"(idtr)); // load the new IDT
+    __asm__ volatile ("sti"); // set the interrupt flag
 }
