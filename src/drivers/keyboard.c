@@ -1,4 +1,6 @@
-#include "../include/drivers/keyboard.h"  // Include keyboard header if needed for definitions
+#include <drivers/keyboard.h>  // Include keyboard header if needed for definitions
+#include <io.h>          // Include I/O header for inb/outb functions
+#include <log.h>         // Include log header for print functions
 
 // Interrupt handler for keyboard IRQ1
 // Interrupt serivice routine (ISR) for keyboard

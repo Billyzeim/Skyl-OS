@@ -1,4 +1,5 @@
-#include "../../include/pic/pic.h"
+#include <pic.h>
+#include <io.h>
 
 void PIC_sendEOI(uint8_t irq)
 {

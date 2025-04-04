@@ -1,6 +1,7 @@
 bits 32
 
 section .data
+global load_gdt
 
 gdt_start:          ; Start of the GDT
     dq 0            ; Null descriptor (first entry must be zero)

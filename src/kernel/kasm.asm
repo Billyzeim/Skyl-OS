@@ -7,7 +7,7 @@ section .text
     dd - (0x1BADB002 + 0x00)
 
 extern kernel_main
-extern load_gdt      ; Declare load_gdt function
+; extern load_gdt      ; Declare load_gdt function
 
 global start
 
@@ -15,7 +15,7 @@ start:
     cli               ; Disable interrupts
 
     ; Load the GDT (Global Descriptor Table)
-    call load_gdt     ; Load GDT
+    ; call load_gdt     ; Load GDT
 
     ; Set segment registers to new GDT values (set DS, ES, FS, GS, SS to data segment)
     mov ax, 0x10      ; Data segment selector (GDT entry 2)
@@ -35,8 +35,8 @@ start:
 
 start32:
     ; Now we are in protected mode
-    mov esp, stack_space  ; Set up stack
-    and esp, 0xFFFFFFF0   ; Align stack to 16 bytes
+    ; mov esp, stack_space  ; Set up stack
+    ; and esp, 0xFFFFFFF0   ; Align stack to 16 bytes
     call kernel_main      ; Call kernel_main (C function)
 
 section .bss

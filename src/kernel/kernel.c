@@ -1,6 +1,7 @@
-#include "../include/log.h"
-#include "../include/dts/idt.h"
-#include "../include/pic/pic.h"
+#include <log.h>
+#include <dts/idt.h>
+#include <dts/gdt.h>
+#include <pic.h>
 
 void erase(void){
     char *vidptr = (char*)0xb8000; 	//video mem begins here.
@@ -17,10 +18,11 @@ void erase(void){
 }
 
 void kernel_main() {
+    erase();
     print("Kernel is running...\n");
-
-    // PIC_remap(0x20, 0x28);  // Initialize the PIC
-    // idt_init();  // Initialize the IDT
+    PIC_remap(0x20, 0x28);  // Initialize the PIC
+    gdt_init();  // Initialize the GDT
+    idt_init();  // Initialize the IDT
     print_int(sizeof (void*));
     // while (1) {
     //     // Poll for keyboard input

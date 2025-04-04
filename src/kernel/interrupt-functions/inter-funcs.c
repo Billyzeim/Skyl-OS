@@ -1,4 +1,4 @@
-#include "../../include/types/defs.h"
+#include <typedefs.h>
 
 static inline bool are_interrupts_enabled()
 {

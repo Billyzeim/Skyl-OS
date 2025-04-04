@@ -1,4 +1,6 @@
-#include "../../include/isr/isr.h"
+#include <isr.h>
+#include <log.h>
+#include <io.h>
 
 void isr_default() {
     // Default ISR handler

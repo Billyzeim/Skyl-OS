@@ -1,9 +1,11 @@
-#include "../../include/dts/idt.h"
-#include "../../include/isr/isr.h"
-#include "../../include/log.h"
+#include <dts/idt.h>
+#include <isr.h>
+#include <log.h>
+extern void* isr_stub_table[];
 
 void exception_handler() {
     __asm__ volatile ("cli; hlt"); // Completely hangs the computer
+    return;
 }
 
 __attribute__((aligned(0x10))) 
@@ -17,6 +19,7 @@ void idt_set_descriptor(uint8_t vector, void* isr, uint8_t flags) {
     descriptor->attributes     = flags;
     descriptor->isr_high       = (uint32_t)isr >> 16;
     descriptor->reserved       = 0;
+    return;
 }
 
 void idt_init() {
@@ -30,4 +33,5 @@ void idt_init() {
 
     __asm__ volatile ("lidt %0" : : "m"(idtr)); // load the new IDT
     __asm__ volatile ("sti"); // set the interrupt flag
+    return;
 }
