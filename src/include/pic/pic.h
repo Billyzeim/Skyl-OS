@@ -24,10 +24,6 @@
    #define PIC_READ_IRR                0x0a    /* OCW3 irq ready next CMD read */
    #define PIC_READ_ISR                0x0b    /* OCW3 irq service next CMD read */
 
-
-    static inline void outb(uint16_t port, uint8_t val);
-    static inline uint8_t inb(uint16_t port);
-    static inline void io_wait(void);
     void PIC_sendEOI(uint8_t irq);
     void PIC_remap(int offset1, int offset2);
     void pic_disable(void);

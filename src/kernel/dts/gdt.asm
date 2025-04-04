@@ -27,7 +27,7 @@ gdt_descriptor:     ; GDT descriptor
     dw gdt_end - gdt_start - 1  ; GDT size (limit)
     dd gdt_start                ; GDT address (base)
 
-global load_gdt
+; global load_gdt
 load_gdt:
     lgdt [gdt_descriptor]   ; Load the GDT
     ret

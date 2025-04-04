@@ -1,8 +1,4 @@
-#include "../../include/pic/pic.h"
-
-static inline void outb(uint16_t port, uint8_t data) {
-    __asm__ volatile ("out %0, %1" : : "a"(data), "Nd"(port));
-}
+#include "../../include/isr/isr.h"
 
 void isr_default() {
     // Default ISR handler

@@ -2,8 +2,7 @@
 #include "../include/dts/idt.h"
 #include "../include/pic/pic.h"
 
-void kernel_main() {
-    print("Kernel is running...\n");
+void erase(void){
     char *vidptr = (char*)0xb8000; 	//video mem begins here.
 	unsigned int j = 0;
 	/* this loops clears the screen
@@ -15,10 +14,14 @@ void kernel_main() {
 		vidptr[j+1] = 0x07; 		
 		j = j + 2;
 	}
+}
 
-    PIC_remap(0x20, 0x28);  // Initialize the PIC
-    idt_init();  // Initialize the IDT
+void kernel_main() {
+    print("Kernel is running...\n");
 
+    // PIC_remap(0x20, 0x28);  // Initialize the PIC
+    // idt_init();  // Initialize the IDT
+    print_int(sizeof (void*));
     // while (1) {
     //     // Poll for keyboard input
     //     unsigned char scancode = read_keyboard();
