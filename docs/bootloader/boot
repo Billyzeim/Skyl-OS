@@ -1,0 +1,40 @@
+# Bootloader
+
+A bootloader is a program that set the ground ready for the kernel to take action. 
+This means it is the bootloader's job to copy the kernel from the drive onto the memory,
+set up a simple GDT, switch from real-mode to protected-mode and jump to the kernel.
+
+## Real-Mode
+
+For backwards compatibility reasons most CPUs boot in real-mode which is a 16-bit mode. 
+In real-mode in order to refer to a memory address you need two things; the segment and the offset.
+The physical address is then calculated as such: physical_address = segment * 16 + offset.
+This means that in real mode you only have 1MB of addressable memory. It is also apparent that 
+the segments overlap, which means there is not a unique way to reffer to a specific address.
+
+## Protected Mode
+
+This CPU mode is a 32-bit mode allowing us to access 4GB of memory. In order to switch in this mode we need something called GDT (read below).
+Our goal is to switch to protected mode so that our os will be more flexible.
+
+## BIOS Interrups
+
+When in 16-bit real-mode we have access to BIOS interrupts. These will help us do things like 
+read from disk (int 13h) or write on screen (int 10h). However, these will not be available to us in protected-mode
+and we will need to handle IRQs (Interrupt Requests) ourselves by implementing ISRs (Interrupt Service Routines).
+
+## GDT (Global Descriptor Table)
+
+The GDT is a way to specify information about memory segments such as size, position and permissions.
+In order to switch to protected-mode we need to have created this table and loaded the GDT Descriptor (which tells us where this table is and
+how big it is) in our gdtr register using the lgdt assembly instruction.
+
+### TO BE ADDED
+
+HOW WE READ FROM DRIVE
+LINKS FROM RESOURCES
+RESTRUCTURE THE DOC
+CODE REFERENCES
+JUMPING TO KERNEL
+WHAT IS A BOOT SECTOR
+HOW BOOTLOADER READS MORE SECTORS
