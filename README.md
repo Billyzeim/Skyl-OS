@@ -9,7 +9,9 @@ They say explaining something is the best way to understand how well you know it
 
 ## How to use
 
-When something is functional it will be added here.
+Run ```make clean``` to clear previous builds.
+Run ```make``` to build.
+Run ```make run``` to...well, run.
 
 ## Contrubuting
 
