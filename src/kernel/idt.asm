@@ -5,6 +5,7 @@ section .text
 global idt_init
 global isr_21
 global init_pic
+extern isr_21_handler
 
 ; Initialize PIC (Programmable Interrupt Controller)
 init_pic:
@@ -73,9 +74,10 @@ isr_21:
     push edx
 
     ; Set up pointer to video memory
-    mov ebx, 0xB8000          ; Start of video memory
-    mov byte [ebx], 'K'       ; Character to print
-    mov byte [ebx + 1], 0x07  ; Attribute byte: white on black
+    ; mov ebx, 0xB8000          ; Start of video memory
+    ; mov byte [ebx], 'K'       ; Character to print
+    ; mov byte [ebx + 1], 0x07  ; Attribute byte: white on black
+    call isr_21_handler
 
     ; Send End of Interrupt to PIC
     mov al, 0x20

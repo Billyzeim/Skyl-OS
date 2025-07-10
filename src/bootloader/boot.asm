@@ -11,7 +11,7 @@ start:
 
     ; Load 20 sectors from disk to 0x10000
     mov ah, 0x02
-    mov al, 13        ; INCREASED TO 20 SECTORS (10KB)
+    mov al, 21        ; INCREASED TO 20 SECTORS (10KB)
     mov ch, 0
     mov cl, 2
     mov dh, 0
