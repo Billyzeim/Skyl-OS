@@ -2,7 +2,7 @@
 #include "log.h"
 #include "isrs.h"
 
-void isr_21_handler() {
+void isr_21() {
     // uint8_t scancode = inb(0x60);  // Read the keyboard scancode
 
     // For demonstration: just print the scancode as a hex value

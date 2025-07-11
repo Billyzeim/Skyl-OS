@@ -30,3 +30,28 @@ void print_char(char c) {
         cursor_y++;
     }
 }
+
+void print_int(int num) {
+    char buffer[12];  // Enough for -2,147,483,648 + '\0'
+    int i = 0;
+
+    if (num == 0) {
+        print_char('0');
+        return;
+    }
+
+    if (num < 0) {
+        print_char('-');
+        num = -num;
+    }
+
+    while (num > 0) {
+        buffer[i++] = (num % 10) + '0';
+        num /= 10;
+    }
+
+    // Digits are stored in reverse
+    while (i--) {
+        print_char(buffer[i]);
+    }
+}

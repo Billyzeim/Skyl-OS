@@ -1,4 +1,4 @@
-ENTRY(stack_init)
+ENTRY(kernel_init)
 
 SECTIONS
 {
