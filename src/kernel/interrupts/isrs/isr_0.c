@@ -7,6 +7,6 @@ volatile uint32_t ticks = 0;
 void isr_0() {
     ticks++;
     if (ticks % 10 == 0) {
-        print("Tick 100\n");
+        // print("Tick 100\n"); // Uncomment to print every 100 ticks
     }
 }

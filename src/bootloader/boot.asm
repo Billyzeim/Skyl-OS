@@ -9,9 +9,9 @@ start:
     mov ss, ax
     mov sp, 0x7C00
 
-    ; Load 20 sectors from disk to 0x10000
+    ; Load x sectors from disk to 0x10000
     mov ah, 0x02
-    mov al, 21        ; INCREASED TO 20 SECTORS (10KB)
+    mov al, 21        ; Number of sectors x
     mov ch, 0
     mov cl, 2
     mov dh, 0
