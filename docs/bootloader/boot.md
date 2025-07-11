@@ -28,10 +28,14 @@ Real mode is a legacy 16-bit CPU mode used for compatibility with older systems.
 - Maximum addressable memory is **1MB**.
 - BIOS interrupts are available (e.g., disk I/O via `int 13h`, screen output via `int 10h`).
 
-> **NOTE**  
+> [!NOTE]  
 > Because segments overlap, there are multiple ways to reference the same physical address. Care must be taken during segment setup.
 
-The `start` label in the assembly code sets up real-mode segments and stack, and uses BIOS interrupt `int 13h` to read the second sector (sector 2) from the disk to address `0x1000`.
+The `start` label in the assembly code sets up real-mode segments and stack, and uses BIOS interrupt `int 13h` to read the next sectors from the disk to address `0x1000`.
+
+> [!WARNING] 
+> The number of sectors loaded by the bootloader depends of the size of the kernel after compilation.
+> Currently this is hard-coded for simplicity but the bootloader should be detecting it automatically.
 
 ---
 
@@ -40,18 +44,22 @@ The `start` label in the assembly code sets up real-mode segments and stack, and
 Reading from the disk is done using **BIOS interrupt 13h**, which is only available in real mode.
 
 ```asm
-mov ah, 0x02       ; BIOS read sector function
-mov al, 1          ; number of sectors
-mov ch, 0          ; cylinder number
-mov cl, 2          ; sector number (start from 1)
-mov dh, 0          ; head number
-mov dl, 0x80       ; first hard drive
-mov bx, 0x1000     ; ES:BX is the destination address
+; Load x sectors from disk to 0x10000
+mov ah, 0x02
+mov al, 21        ; Number of sectors x
+mov ch, 0
+mov cl, 2
+mov dh, 0
+mov dl, 0x80
+mov bx, 0x1000    ; Segment
+mov es, bx
+xor bx, bx        ; Offset
 int 0x13
+jc disk_error
 ```
 
-> **WARNING**  the
-> Always check the **Carry Flag (CF)** after a BIOS disk read to handle failures. In your code, this is correctly done with a `jc disk_error`.
+> [!WARNING]
+> Always check the **Carry Flag (CF)** after a BIOS disk read to handle failures. In this code, this is correctly done with a `jc disk_error`.
 
 ---
 
