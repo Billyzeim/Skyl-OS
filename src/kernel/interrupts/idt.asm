@@ -1,10 +1,11 @@
-; idt.asm - IDT initialization with ISRs for IRQs 0–15
+; idt.asm - IDT initialization with ISRs for IRQs 0–15 and ISR 0 (division by zero)
 ; Compile with: nasm -f elf32 idt.asm -o idt.o
 
 section .text
 global idt_init
 global init_pic
 
+; Declare IRQ ISRs 0–15
 %assign i 0
 %rep 16
     extern isr_ %+ i
@@ -12,6 +13,9 @@ global init_pic
 %assign i i+1
 %endrep
 
+; Declare ISR 0 (division by zero)
+extern isr_32
+global isr_32_asm
 
 ; ------------------------
 ; Initialize the PIC (8259A)
@@ -61,24 +65,34 @@ init_idt:
     xor eax, eax
     rep stosd
 
+; ------------------------
+; IRQs (INT 0x20–0x2F)
+; ------------------------
 %assign i 0
 %rep 16
     mov eax, isr_ %+ i %+ _asm
-    mov ebx, (0x20 + i) * 8         ; Calculate IDT entry offset
-
-    mov word [idt + ebx], ax                ; Offset bits 0..15
-    mov word [idt + ebx + 2], 0x08          ; Selector
-    mov word [idt + ebx + 4], 0x8E00        ; Type + attributes
+    mov ebx, (0x20 + i) * 8         ; IDT entry offset
+    mov word [idt + ebx], ax
+    mov word [idt + ebx + 2], 0x08
+    mov word [idt + ebx + 4], 0x8E00
     shr eax, 16
-    mov word [idt + ebx + 6], ax            ; Offset bits 16..31
+    mov word [idt + ebx + 6], ax
 %assign i i+1
 %endrep
 
+; hereeeee: Division by zero handler (INT 0x00)
+    mov eax, isr_32_asm
+    mov ebx, 0x00 * 8               ; INT 0x00 = Division by zero
+    mov word [idt + ebx], ax
+    mov word [idt + ebx + 2], 0x08
+    mov word [idt + ebx + 4], 0x8E00
+    shr eax, 16
+    mov word [idt + ebx + 6], ax
 
     ret
 
 ; ------------------------
-; ISR stubs
+; ISR stubs for IRQs
 ; ------------------------
 %assign i 0
 %rep 16
@@ -95,6 +109,16 @@ isr_ %+ i %+ _asm:
     iret
 %assign i i+1
 %endrep
+
+; ------------------------
+; ISR stub for Division by Zero (INT 0x00)
+; ------------------------
+isr_32_asm:
+    cli
+    pushad
+    call isr_32
+    popad
+    iret
 
 ; ------------------------
 ; IDT storage

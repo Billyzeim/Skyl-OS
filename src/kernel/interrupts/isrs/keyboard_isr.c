@@ -3,12 +3,6 @@
 #include "isrs.h"
 #include "drivers.h"
 
-int inb(uint16_t port) {
-    uint8_t value;
-    __asm__ __volatile__("inb %1, %0" : "=a"(value) : "Nd"(port));
-    return value;
-}
-
 void isr_1() {
     uint8_t scancode = inb(0x60);
 
