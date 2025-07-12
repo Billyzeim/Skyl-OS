@@ -107,7 +107,7 @@ gdt_start:
 
 The `gdt_desc` structure defines the size and address of the GDT, which is then loaded using the `lgdt` instruction.
 
-> **INFO**  
+> [!NOTE]
 > The limit in GDT is `0xFFFF` and granularity is set to 4KB, which means the actual segment size is 4GB.
 
 ---
@@ -122,7 +122,7 @@ jmp 0x08:0x10000
 
 This jumps to a flat memory address `0x10000`, where the kernel was loaded earlier.
 
-> **NOTE**  
+> [!NOTE]  
 > `0x08` is the selector for the code segment in the GDT.
 
 ---

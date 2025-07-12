@@ -1,46 +1,84 @@
 # Toolchain
-CC = gcc
-LD = ld
-AS = nasm
+CC := gcc
+LD := ld
+AS := nasm
 
 # Flags
-CFLAGS = -m32 -ffreestanding -nostdlib -fno-pie
-LDFLAGS = -m elf_i386 -T linker.ld --oformat binary
+CFLAGS := -m32 -ffreestanding -nostdlib -fno-pie -I include
+ASFLAGS_KERNEL := -f elf32
+ASFLAGS_BOOT := -f bin
+LDFLAGS := -m elf_i386 -T linker.ld --oformat binary
 
-# Paths
-BOOTLOADER_SRC = src/bootloader/boot.asm
-KERNEL_SRC = src/kernel/kernel.c
-
-BOOTLOADER_BIN = build/bootloader.bin
-KERNEL_OBJ = build/kernel.o
-KERNEL_BIN = build/kernel.bin
-OS_IMAGE = build/os-image.bin
-
-# Ensure build directory exists
+# Build directories
 BUILD_DIR := build
+DIST_DIR := dist
 
-all: $(BUILD_DIR) $(OS_IMAGE)
+# Source directories
+BOOTLOADER_SRC_DIR := src/bootloader
+KERNEL_SRC_DIR := src/kernel
 
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+# Find all source files
+BOOTLOADER_SRCS := $(shell find $(BOOTLOADER_SRC_DIR) -name '*.asm')
+KERNEL_C_SRCS := $(shell find $(KERNEL_SRC_DIR) -name '*.c')
+KERNEL_ASM_SRCS := $(shell find $(KERNEL_SRC_DIR) -name '*.asm')
 
-$(BOOTLOADER_BIN): $(BOOTLOADER_SRC)
-	$(AS) -f bin $< -o $@
+# ELF32 object outputs
+BOOTLOADER_ELF_OBJS := $(patsubst $(BOOTLOADER_SRC_DIR)/%.asm,$(BUILD_DIR)/bootloader/%.o,$(BOOTLOADER_SRCS))
+KERNEL_C_OBJS := $(patsubst $(KERNEL_SRC_DIR)/%.c,$(BUILD_DIR)/kernel/%.o,$(KERNEL_C_SRCS))
+KERNEL_ASM_OBJS := $(patsubst $(KERNEL_SRC_DIR)/%.asm,$(BUILD_DIR)/kernel/%.o,$(KERNEL_ASM_SRCS))
+
+ALL_OBJS := $(KERNEL_C_OBJS) $(KERNEL_ASM_OBJS)
+
+# Final output files
+BOOTLOADER_BIN := $(BUILD_DIR)/bootloader.bin
+KERNEL_BIN := $(BUILD_DIR)/kernel.bin
+OS_IMAGE := $(DIST_DIR)/os-image.bin
+
+.PHONY: all run clean asm-elf docs
+
+all: $(OS_IMAGE)
+
+$(OS_IMAGE): $(BOOTLOADER_BIN) $(KERNEL_BIN) | $(DIST_DIR)
+	cat $^ > $@
+
+$(BOOTLOADER_BIN): $(BOOTLOADER_SRCS) | $(BUILD_DIR)
+	@mkdir -p $(@D)
+	$(AS) $(ASFLAGS_BOOT) $< -o $@
 	truncate -s 512 $@
 
-$(KERNEL_OBJ): $(KERNEL_SRC)
+$(KERNEL_BIN): $(ALL_OBJS) linker.ld
+	$(LD) $(LDFLAGS) -o $@ $(ALL_OBJS)
+
+# Compile C to ELF32 object
+$(BUILD_DIR)/kernel/%.o: $(KERNEL_SRC_DIR)/%.c | $(BUILD_DIR)
+	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(KERNEL_BIN): $(KERNEL_OBJ) linker.ld
-	$(LD) $(LDFLAGS) -o $@ $<
+# Compile kernel ASM to ELF32 object
+$(BUILD_DIR)/kernel/%.o: $(KERNEL_SRC_DIR)/%.asm | $(BUILD_DIR)
+	@mkdir -p $(@D)
+	$(AS) $(ASFLAGS_KERNEL) $< -o $@
 
-$(OS_IMAGE): $(BOOTLOADER_BIN) $(KERNEL_BIN)
-	cat $(BOOTLOADER_BIN) $(KERNEL_BIN) > $@
+# Compile bootloader ASM to ELF32 object (optional, not used in binary image)
+$(BUILD_DIR)/bootloader/%.o: $(BOOTLOADER_SRC_DIR)/%.asm | $(BUILD_DIR)
+	@mkdir -p $(@D)
+	$(AS) $(ASFLAGS_KERNEL) $< -o $@
 
+# Make build and dist directories
+$(BUILD_DIR) $(DIST_DIR):
+	@mkdir -p $@
+
+# Run with QEMU
 run: $(OS_IMAGE)
 	qemu-system-i386 -drive format=raw,file=$<
 
-clean:
-	rm -rf build
+# Build all ELF32 objects from ASM sources
+asm-elf: $(KERNEL_ASM_OBJS) $(BOOTLOADER_ELF_OBJS)
 
-.PHONY: all run clean
+# Cleanup
+clean:
+	rm -rf $(BUILD_DIR) $(DIST_DIR)
+
+# Docs placeholder
+docs:
+	@echo "Generating documentation..."

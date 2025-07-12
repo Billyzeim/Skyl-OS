@@ -9,16 +9,16 @@ start:
     mov ss, ax
     mov sp, 0x7C00
 
-    ; Load 1 sector from disk to 0x1000
+    ; Load x sectors from disk to 0x10000
     mov ah, 0x02
-    mov al, 1
+    mov al, 21        ; Number of sectors x
     mov ch, 0
     mov cl, 2
     mov dh, 0
     mov dl, 0x80
-    mov bx, 0x1000
+    mov bx, 0x1000    ; Segment
     mov es, bx
-    xor bx, bx
+    xor bx, bx        ; Offset
     int 0x13
     jc disk_error
 
@@ -30,7 +30,7 @@ start:
     or eax, 1
     mov cr0, eax
 
-    ; ; Far jump to clear instruction queue and load new CS
+    ; Far jump to clear pipeline and load CS
     jmp 0x08:protected_mode_start
 
 ; --------------- GDT ----------------
@@ -47,21 +47,20 @@ gdt_desc:
 ; --------------- Protected Mode Code ----------------
 [BITS 32]
 protected_mode_start:
+    ; Set up data segments
     mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
     mov ss, ax
-    mov esp, 0x90000
 
-    ; Jump to kernel entry point at 0x1000 (flat address)
-    jmp 0x08:0x10000   ; 0x08 = your code segment selector
+    ; Jump to kernel entry point
+    jmp 0x08:0x10000
 
 hang:
     hlt
     jmp hang
-
 
 ; --------------- Error Handling ----------------
 [BITS 16]
