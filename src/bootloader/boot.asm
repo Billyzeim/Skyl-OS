@@ -11,7 +11,7 @@ start:
 
     ; Load x sectors from disk to 0x10000
     mov ah, 0x02
-    mov al, 21        ; Number of sectors x
+    mov al, 29        ; Number of sectors x
     mov ch, 0
     mov cl, 2
     mov dh, 0
