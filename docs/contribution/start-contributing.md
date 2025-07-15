@@ -67,7 +67,7 @@ While developing your own features it is very important for other people to user
 
 Under [docs](docs) there should be a file stuctrue starting from more abstract structures of the project such as `kernel` or `bootloader`.</br>
 Under them there should lie folders for grouped parts of the project that handle common things like `terminal-graphics` or `process-handling` for the `kernel`.</br>
-If further categorization is needed to provide clarity is should be pursued. When an appropriate depth is reached there should be a `feature-name.md` file that contains the following information:</br>
+If further categorization is needed to provide clarity it should be pursued. When an appropriate depth is reached there should be a `feature-name.md` file that contains the following information:</br>
 1. A general description of what the feature does and why it is needed (keep this one concise).
 2. A usage guide for different functions such as types and use cases (examples really make things more clear).
 3. A more detailed explaination of how and why the code works (techniques and algorithms used).
