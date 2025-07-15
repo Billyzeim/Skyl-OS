@@ -1,6 +1,8 @@
 #include <stdint.h>
 #include <stdarg.h>
 #include <stdbool.h>
+#include <terminal_io.h>
+#include <stdbool.h>
 
 #define WHITE_ON_BLACK 0x0F
 #define VGA_ADDRESS 0xB8000
@@ -245,3 +247,132 @@ void print_int(int num) {
     }
 }
 
+static char skip_whitespace(void) {
+    char c;
+    do {
+        c = getchar();
+    } while (c == ' ' || c == '\t' || c == '\n' || c == '\r');
+    return c;
+}
+
+static void read_word(char* buf, int max_len) {
+    int i = 0;
+    char c;
+    while (i < max_len - 1) {
+        c = getchar();
+        if (c == '\n' || c == '\r' || c == ' ') break;
+        buf[i++] = c;
+    }
+    buf[i] = '\0';
+}
+
+static void read_number(char* buf, int max_len) {
+    int i = 0;
+    char c;
+    while (i < max_len - 1) {
+        c = getchar();
+        if (c < '0' || c > '9') break;
+        buf[i++] = c;
+    }
+    buf[i] = '\0';
+}
+
+static int atoi(const char* s) {
+    int result = 0;
+    int sign = 1;
+    if (*s == '-') {
+        sign = -1;
+        s++;
+    }
+    while (*s >= '0' && *s <= '9') {
+        result = result * 10 + (*s++ - '0');
+    }
+    return sign * result;
+}
+
+static int atox(const char* s) {
+    int result = 0;
+    while ((*s >= '0' && *s <= '9') ||
+           (*s >= 'a' && *s <= 'f') ||
+           (*s >= 'A' && *s <= 'F')) {
+        char c = *s++;
+        if (c >= '0' && c <= '9') {
+            result = result * 16 + (c - '0');
+        } else if (c >= 'a' && c <= 'f') {
+            result = result * 16 + (c - 'a' + 10);
+        } else if (c >= 'A' && c <= 'F') {
+            result = result * 16 + (c - 'A' + 10);
+        }
+    }
+    return result;
+}
+
+int scanf(const char* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+
+    int assigned = 0;
+    char c, buffer[64];
+
+    while (*fmt) {
+        if (*fmt == '%') {
+            fmt++;
+            if (*fmt == 'd') {
+                char* temp = buffer;
+                int i = 0;
+                char ch = skip_whitespace();
+                if (ch == '-') {
+                    buffer[i++] = ch;
+                    ch = getchar();
+                }
+                while (ch >= '0' && ch <= '9' && i < 63) {
+                    buffer[i++] = ch;
+                    ch = getchar();
+                }
+                buffer[i] = '\0';
+                int* out = va_arg(args, int*);
+                *out = atoi(buffer);
+                assigned++;
+            } else if (*fmt == 'x') {
+                char* temp = buffer;
+                int i = 0;
+                char ch = skip_whitespace();
+                while (((ch >= '0' && ch <= '9') ||
+                        (ch >= 'a' && ch <= 'f') ||
+                        (ch >= 'A' && ch <= 'F')) && i < 63) {
+                    buffer[i++] = ch;
+                    ch = getchar();
+                }
+                buffer[i] = '\0';
+                int* out = va_arg(args, int*);
+                *out = atox(buffer);
+                assigned++;
+            } else if (*fmt == 's') {
+                char* out = va_arg(args, char*);
+                char ch = skip_whitespace();
+                int i = 0;
+                while (ch != ' ' && ch != '\n' && ch != '\r' && i < 63) {
+                    out[i++] = ch;
+                    ch = getchar();
+                }
+                out[i] = '\0';
+                assigned++;
+            } else if (*fmt == 'c') {
+                char* out = va_arg(args, char*);
+                *out = getchar();
+                assigned++;
+            } else {
+                // unsupported format
+            }
+        } else {
+            char ch = getchar();
+            if (ch != *fmt) {
+                break; // mismatch between input and format
+            }
+        }
+        fmt++;
+    }
+
+    va_end(args);
+    return assigned;
+}
