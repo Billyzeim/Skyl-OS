@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "log.h"
-#include "isrs.h"
+#include <terminal_io.h>
+#include <isrs.h>
 
 volatile uint32_t ticks = 0;
 

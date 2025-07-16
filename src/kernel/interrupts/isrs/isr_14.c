@@ -1,6 +1,6 @@
 #include <stdint.h>
-#include "log.h"
-#include "isrs.h"
+#include <terminal_io.h>
+#include <isrs.h>
 
 void isr_14() {
     print("\nInterrupt 14 was triggered and served successfully");
