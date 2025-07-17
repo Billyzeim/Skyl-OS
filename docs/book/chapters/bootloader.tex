@@ -1,10 +1,10 @@
 \chapter{Bootloader}
 
-If you are stil here... buckle up. In this chapter we will familiarize ourselves with some concepts nessecary to understand bootloaders
+If you are stil here... buckle up. In this chapter we will familiarize ourselves with some concepts necessary to understand bootloaders
 and then start writting our own.
 
-Before we start it should be made clear that everything below applies to the Intel i-386 processor architecture (32-bit x86), however, it should not
-be that difficult to transfer this knowledge to slightly different architectures.
+Before we start it should be made clear that everything below applies to the Intel i-386 processor architecture (32-bit x86).
+However, transferring that knowledge to different architectures should not be that difficult
 
 \section{CPU Operating Modes}
 
@@ -12,19 +12,46 @@ When the computer turns on the x86 processor is automatically in \textbf{Real Mo
 kept even in newer processors for backwards compatibility reasons. 
 
 When in Real Mode the CPU is running by default in 16-bit mode. While 32-bit is technically still available the intended usage is the
-16-bit registeres. This means that when writting my bootloader we should use 16-bit registers for any operations (with a small exception).
+16-bit registeres. This means that when writting our bootloader we should use 16-bit registers for any operations (with a small exception).
 
 Another limitation of Real Mode is that you only have access to a specific size of memory. When referring to a memory address in Real Mode
-we use a 20-bit convention. The Physical Address is referred to using a Segment and Offset like this: \textbf(PA = Segment * 16 + Offset).
+we use a 20-bit physical addressing. The Physical Address is referred to using a Segment and Offset like this: 
+\[
+\textbf{PA = Segment} \cdot \textbf{16 + Offset}
+\]
 Essentially, using this convention you can only represent a number if it can fit in a 5 digit hex. We can also see that there are multiple
 ways to represent the same address. For example the physical address 0x12345 can be represented by 0x1234 and 0x0005, 0x1230 and 0x0045,
-0x1200 and 0x0034... 
+0x1200 and 0x0345... and so on. This way of accessing memory limits us to just below 1MiB of memory.
 
 By now it should be clear that the addresses used in Real Mode are the actual physical addresses. This does not allow us to protect 
 memory and define its owenership because every process can simply see every physical address. We will get into virtual memory later
-on this book but I will give a brief explaination of how it help with owenership just to clarify why physical addresses are limiting.
+on this book but I will give a brief explaination of how it helps with owenership just to clarify why physical addresses are limiting.
 
 When having virtual addresses, our Operating System is responsible of mapping every virtual address to a physical one. Since this 
-mapping is not handled by the user program itself, when two programs refer to the same virtual memory, very little does it matter
-since the mapping will make sure they will reffer to totally different physical addresses, rendering both unable to access eachothers'
+mapping is not handled by the user program itself, when two programs refer to the same virtual memory, very little does it matter,
+since the mapping will make sure they will refer to totally different physical addresses, rendering both unable to access eachothers'
 memory.
+
+However, this approach is simply inadequate for modern systems. This is why engineers came up with another CPU Operation Mode called
+\textbf{Protected Mode}. In this mode, while we still do not have any virtualization, we can take advantage of how memory is segmented
+to protect critical data from the user. This can happen by defining different memory segments with different privileges
+and letting the CPU decide if a piece of code has the privilages it tries to claim, according to the privilage ring of the 
+segment selected to access it. Memory management and CPU Operating Modes will have chapters of their own later in this book so
+we will not elaborate any longer here. For now let's focus on what our bootloader is and needs to do in its short but critical lifespan. 
+
+\section{The Role Of The Bootloader}
+
+When the computer turns on the first program to take control is the BIOS. Among other things, the BIOS transfers control to the bootloader
+which is then responsible for loading the OS. 
+
+First, the BIOS scans the data storage devices. More precisely it checks the first 512 bytes of each one, namely the Master Boot Record 
+(MBR), which is the place a bootloader conventionally resides on. If the last two bytes of the MBR are the word 0xAA55 the BIOS 
+knows the storage device is a bootable device.
+
+Once the bootable is identified the BIOS loads the bootloader from the MBR to the memory address 0x7C00. This address is conventionally
+used by BIOS software to load the bootloader. Bootloader developers conventionally assume this is where their bootloader will 
+be loaded. The address 0x7C00 is way below the 1MiB accessible threshold and still leaves space below it for interrupt vectors (we will
+talk about them later).
+
+After control has been passed to the bootloader it is now its job to load the rest of the operating systems. In later section we will 
+discuss some techniques to overcome the 512-byte 
