@@ -42,7 +42,7 @@ we will not elaborate any longer here. For now let's focus on what our bootloade
 \section{The Role Of The Bootloader}
 
 When the computer turns on the first program to take control is the BIOS. Among other things, the BIOS transfers control to the bootloader
-which is then responsible for loading the OS. 
+which is then responsible for loading the OS. Modern systems use UEFI but in the sake of simplicity we will focus on BIOS.
 
 First, the BIOS scans the data storage devices. More precisely it checks the first 512 bytes of each one, namely the Master Boot Record 
 (MBR), which is the place a bootloader conventionally resides on. If the last two bytes of the MBR are the word 0xAA55 the BIOS 
@@ -54,4 +54,4 @@ be loaded. The address 0x7C00 is way below the 1MiB accessible threshold and sti
 talk about them later).
 
 After control has been passed to the bootloader it is now its job to load the rest of the operating systems. In later section we will 
-discuss some techniques to overcome the 512-byte 
+discuss some techniques to overcome the 512-byte barrier and the limitations of the Real Mode. 
