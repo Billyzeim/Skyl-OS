@@ -1,0 +1,30 @@
+\chapter{Bootloader}
+
+If you are stil here... buckle up. In this chapter we will familiarize ourselves with some concepts nessecary to understand bootloaders
+and then start writting our own.
+
+Before we start it should be made clear that everything below applies to the Intel i-386 processor architecture (32-bit x86), however, it should not
+be that difficult to transfer this knowledge to slightly different architectures.
+
+\section{CPU Operating Modes}
+
+When the computer turns on the x86 processor is automatically in \textbf{Real Mode}, which has some significant limitations, but is
+kept even in newer processors for backwards compatibility reasons. 
+
+When in Real Mode the CPU is running by default in 16-bit mode. While 32-bit is technically still available the intended usage is the
+16-bit registeres. This means that when writting my bootloader we should use 16-bit registers for any operations (with a small exception).
+
+Another limitation of Real Mode is that you only have access to a specific size of memory. When referring to a memory address in Real Mode
+we use a 20-bit convention. The Physical Address is referred to using a Segment and Offset like this: \textbf(PA = Segment * 16 + Offset).
+Essentially, using this convention you can only represent a number if it can fit in a 5 digit hex. We can also see that there are multiple
+ways to represent the same address. For example the physical address 0x12345 can be represented by 0x1234 and 0x0005, 0x1230 and 0x0045,
+0x1200 and 0x0034... 
+
+By now it should be clear that the addresses used in Real Mode are the actual physical addresses. This does not allow us to protect 
+memory and define its owenership because every process can simply see every physical address. We will get into virtual memory later
+on this book but I will give a brief explaination of how it help with owenership just to clarify why physical addresses are limiting.
+
+When having virtual addresses, our Operating System is responsible of mapping every virtual address to a physical one. Since this 
+mapping is not handled by the user program itself, when two programs refer to the same virtual memory, very little does it matter
+since the mapping will make sure they will reffer to totally different physical addresses, rendering both unable to access eachothers'
+memory.
