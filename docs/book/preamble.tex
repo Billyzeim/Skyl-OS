@@ -25,3 +25,30 @@
   breaklines=true,
   captionpos=b
 }
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinelanguage{ASM}{
+  keywords={mov, jmp, call, ret, push, pop, int, nop, cmp, jne, je, jg, jl, add, sub, inc, dec, xor, and, or, test, lea},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+}
+
+\lstset{
+  language=ASM,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray}\bfseries,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{lightgray!10},
+  tabsize=2,
+  captionpos=b,
+}
