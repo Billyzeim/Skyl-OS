@@ -1,0 +1,56 @@
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{geometry}
+\geometry{margin=2.5cm}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{amsmath, amssymb}
+\usepackage{listings}
+\usepackage{caption}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[LO]{\nouppercase{\leftmark}}
+\fancyhead[RE]{\nouppercase{\rightmark}}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color[gray]{0.95},
+  frame=single,
+  breaklines=true,
+  captionpos=b
+}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinelanguage{ASM}{
+  keywords={mov, jmp, call, ret, push, pop, int, nop, cmp, jne, je, jg, jl, add, sub, inc, dec, xor, and, or, test, lea},
+  sensitive=true,
+  morecomment=[l]{;},
+  morestring=[b]",
+}
+
+\lstset{
+  language=ASM,
+  basicstyle=\ttfamily\small,
+  keywordstyle=\color{blue}\bfseries,
+  commentstyle=\color{gray}\bfseries,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  stepnumber=1,
+  numbersep=8pt,
+  showstringspaces=false,
+  breaklines=true,
+  frame=single,
+  backgroundcolor=\color{lightgray!10},
+  tabsize=2,
+  captionpos=b,
+}
+\usepackage{float}
+

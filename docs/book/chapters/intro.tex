@@ -1,0 +1,83 @@
+\chapter{Introduction}
+
+Welcome to my journey of writing an operating system from scratch... and hopefully not going insane in the process.
+My hope is that this book will bring some of you along for this ride and help you learn from — and hopefully avoid — my mistakes. 
+
+When I started studying about operating systems (no earlier than 4 months ago) I found very few sources, most of which
+claim OS development is a dark path mere mortals should avoid.
+And me being the optimist I am, I denied this fate and walked down that path only to find out they were pretty... well, right.
+
+However, the majority of obstacles I have encountered are immediately correlated with the lack of resources.
+I am not sure whether this scarcity is due to financial incentives or the genuine difficulty of the field, 
+but it undeniably slows down potential progress.
+
+This book will contain what I have learned so far and explain my mental process. I have found following someone's
+learning experience can ease the beginner's struggle. The reader can overcome common challenges by following the 
+thought process someone else used to tackle them. However, all material should be accompanied by
+hands-on experience for best understanding.
+
+\section{Why Write Your Own OS?}
+
+Studying Operating Systems is challenging but trying to implement one is a totally different beast. Even realizing how to
+start studying could critically discourage many people. 
+Therefore, diving into OS development definitely requires some "getting your hands dirty" to understand.
+
+In the process there is definitely an overwhelming amount of low-level detail you could encounter, 
+but there is luckily as much to gain in knowledge. From how a bootloader works to how the hardware of your computer is wired
+together to perform basic tasks like handling signals of peripheral devices or doing math, how much there is to learn is only 
+limited by your determination. After finishing this project you will walk out a totally different person: a low-level developer
+or even engineer, dare I say. 
+
+\section{What You'll Learn}
+
+\begin{itemize}
+  \item How bootloaders work and how to build one
+  \item What real mode and protected mode is
+  \item Writing a memory manager
+  \item Implementing syscalls
+\end{itemize}
+
+\section{Who This Book Is For}
+
+By now you should know that the purpose of this book is to make diving into OS development a little more beginner friendly.
+When writing this book I mainly give my own perspective, as an Electrical Engineering and Computer Science student, therefore
+I mainly imagine myself addressing people of virtually my technical background and knowledge. 
+
+However, I believe that this project will also benefit hobbyists and professors looking to incorporate low-level
+OS development into their courses, by helping them understand what challenges students might face while studying this
+subject and providing a simple enough prototype which students can understand, replicate or iterate on.
+
+\section{What You Should Already Know}
+
+As was mentioned above I, myself, have some technical background. Although I am not an expert it would surely help
+if the readers of this book had a level of understanding similar to or greater than mine.
+
+More specifically I had experience in:
+\begin{itemize}
+    \item High-level C programming
+    \item Minimal understanding of assembly
+    \item Basic hardware knowledge and how components interact
+    \item Introductory digital design
+  \end{itemize}
+
+Understanding the material of this book should require some familiarity with the above.
+
+\section{How To Approach This Book}
+
+While reading this book you will find that you and I have a slightly different way of understanding things,
+simply because that is statistically true. When I started implementing things, nothing worked. 
+My study process was chaotic due to the lack of structured resources. Most of my progress came from repeated 
+trial — and more importantly — error.
+
+Having said that, I hope it is clear that we will struggle in slightly different things for slightly
+different reasons and this should not discourage you at all. When (not if) times get tough feel free 
+to reach out to me, a contributor, or one of your professors to help clarify misunderstandings.
+
+\section{Book Structure and Approach}
+
+This book follows the narrative of my own development journey. In each stage of building the operating 
+system, I had to make structural and architectural decisions. In the first chapters, I’ll walk you through 
+the reasoning behind my choices — from setting up a simple bootloader and transitioning from 16-bit to 
+32-bit protected mode, to handling interrupts and implementing memory management. These early chapters 
+favor simplicity and clarity. Later on, we’ll explore more complex or alternative designs, compare 
+architectures, and analyze the trade-offs behind them.
