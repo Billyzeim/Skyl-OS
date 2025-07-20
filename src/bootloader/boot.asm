@@ -1,13 +1,14 @@
-[ORG 0x7C00]
-[BITS 16]
+[ORG 0x7C00] ; This is where the bootloader is loaded in memory
+[BITS 16]    ; Bootloader code starts in 16-bit mode
 
 start:
     cli
-    xor ax, ax
-    mov ds, ax
-    mov es, ax
-    mov ss, ax
-    mov sp, 0x7C00
+    mov ax, 0x0700
+    mov ss, ax       ; Set stack segment to 0x0700
+    mov sp, 0x0000   ; Set stack pointer below of bootloader
+    xor ax, ax       ; Zero-out ax
+    mov ds, ax       ; Set data segment to 0
+    mov es, ax       ; Set extra segment to 0
 
     ; Load x sectors from disk to 0x10000
     mov ah, 0x02
