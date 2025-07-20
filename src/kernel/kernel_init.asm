@@ -1,7 +1,7 @@
 section .text.start
 
 global kernel_init
-extern kernel_main
+extern kernel_low
 extern __stack_top
 extern idt_init
 global jmp_hh_kernel
@@ -13,7 +13,7 @@ kernel_init:
     ; Initialize IDT and PIC
     call idt_init
     sti
-    call kernel_main
+    call kernel_low
     hlt
 
 jmp_hh_kernel:

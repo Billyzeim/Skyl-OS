@@ -15,6 +15,7 @@ extern uint32_t first_page_table[PAGE_TABLE_ENTRIES];
 
 void init_paging();
 void enable_paging(uint32_t* pd);
+void unmap_page(uint32_t* pd, uint32_t index);
 
 
 #endif

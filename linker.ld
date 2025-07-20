@@ -1,4 +1,4 @@
-ENTRY(kernel_init)
+ENTRY(kernel_low)
 
 SECTIONS
 {

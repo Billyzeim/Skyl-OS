@@ -28,3 +28,9 @@ void enable_paging(uint32_t* pd) {
     cr0 |= 0x80000000;  // Set paging bit
     asm volatile("mov %0, %%cr0" :: "r"(cr0));
 }
+
+void unmap_page(uint32_t* pd, uint32_t index) {
+    if (index < PAGE_DIR_ENTRIES) {
+        pd[index] = 0x00000002; // Reset the page directory entry
+    }
+}
