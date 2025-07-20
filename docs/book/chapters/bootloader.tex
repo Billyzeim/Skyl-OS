@@ -97,14 +97,15 @@ First of all \texttt{cli} is used to prevent the system from triggering interrup
 Since we have not dealt with setting up interrupt handling yet, they will just cause problems.
 
 In lines 6 to 8 we are setting up a simple stack for our Real Mode. To understand these lines we must
-remember how we address physical memory in Real Mode. It our Stack Segment pointer (ss) we choose segment 0x0700
-and in our Stack Pointer (sp) we define the offset 0x0000. Now the physical address is calculated as such:
+remember how we address physical memory in Real Mode. It our Stack Segment pointer (ss) we choose segment \texttt{0x0700}
+and in our Stack Pointer (sp) we define the offset \texttt{0x0000}. Now the physical address is calculated as such:
 \[
 \textbf{PA = 0x0700} \cdot \textbf{16 + 0x0000}
 \textbf{ => PA = 0x7000 + 0x0000}
 \textbf{    => PA = 0X7000}
 \]
-This address is chosen to be more than 512 bytes below 0x7C00, the range where out bootloader is placed.
+This address is chosen to be more than 512 bytes below \texttt{0x7C00}, the range where out bootloader is placed.
+As mentioned, there are other combinations that could address the same memory as well.
 Note that the bootloader might still run without lines 6 to 11, however, without having the stack set up
 and the ax, ds and es registers zeroed-out the environment would be highly unpredictable.
 
@@ -112,8 +113,8 @@ Now that we are in a controllable environment we can load our kernel into memory
 a very useful feature of BIOS, BIOS interrupts. Since we have not explained interrupts yet, we can think of them
 as favors. More specifically when we trigger a BIOS interrupt we stop the execution of anything else, as the name states,
 and have BIOS do what we ask. In this occasion by calling \texttt{int 0x13} we ask the BIOS to load some data from our
-hard drive into our memory. However, before asking that we must pass some parameters using some registers to tell BIOS
-exactly what it should do.
+hard drive into our memory. However, before triggering the interrupt we must pass some parameters using some registers to 
+tell BIOS exactly what it should do.
 
 \begin{table}[h]
     \centering
@@ -132,7 +133,62 @@ exactly what it should do.
     \label{tab:disk_read_params}
 \end{table}
     
-    
+Since interrupt \texttt{0x13} provides multiple storage device related function we can use the \texttt{ah} register
+to choose the \texttt{Read Sectors From Drive} function.
+In the \texttt{al} register we can define the number of sectors (512-byte unit) we want to read. For simplicity
+we will initially be reading just one.
+
+Before understanding what registers \texttt{ch}, \texttt{cl} and \texttt{dl} we need to introduce a new addressing
+model called \textbf{Cylinder-Head-Sector} (or CHS). As the name states, this model mirrors the concept of physical 
+cylinders, heads and sectors a traditional hard drive uses. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/chs_diagram.png}
+    \caption{CHS addressing layout: cylinders, heads, and sectors}
+    \label{fig:chs}
+\end{figure}
+
+As shown above, hard drives are constituted of platters which are essentially circular disks. On both surfaces
+of these platters - both the top and bottom - data can be written magnetically by a device called head. So for 
+4 platters we have 8 heads. 
+
+Now imagine multiple cylinders with centers aligned with the platters'. The intersection of a platter's surface 
+and a cylinder is called a track. Naturally we have \(\textbf{Cylinders} \cdot \textbf{Platters} \cdot \textbf{2}\)
+number of tracks. Each track can be accessed by only one head.
+
+Each track is divided into sectors, which we can visualize as circular sectors. Each sector is the smallest addressable
+unit and has a size of 512 bytes.
+
+When writting data to a hard drive we must specify the cylinder, the head and the sector along the track defined by the
+cylinder and the head's surface. Each combination of CHS maps to a 512-byte unit or more precisely a Logical Block 
+Address (LBA). First, we write data in cylinder 0, head 0, and sector 1 (sectors start counting from number 1). As we 
+fill in sectors until sector 63 we can start filling up heads. When head 255 is filled, we fill in cylinder. The 
+last available cylinder is 1023. 
+
+\begin{itemize}
+    \item \textbf{1024}: Cylinders (0–1023, 10 bits)
+    \item \textbf{256}: Heads (0–255, 8 bits)
+    \item \textbf{63}: Sectors (1–63, 6 bits), \textit{1-based indexing}
+    \item \textbf{512}: Bytes per sector
+\end{itemize}
+  
+Since CHS is limited at addressing 8.4 GiB of data it has been declared obsolete and replaced by direct LBA addressing.
+However, the BIOS still offers this function.
+
+Also, note that modern hard drives do not expose their geometrical structure and instead use an emulation layer for
+CHS addressing.
+
+For our case, since the first sector contains the bootloader, we want to start loading from sector number 2.
+So we can set our cylinder to 0, our head to 0 and our sector to 2. Be careful when addressing cylinders
+as their 2 high bits are defined in bits 6 and 7 of \texttt{cl}.
+
+In the register \texttt{dl} we must specify the storage unit which we want to read data from.
+Options \texttt{0x00} to \texttt{0x7F} correspond to floppy dics, while options \texttt{0x80} and higher
+correspond to hard drives.
+
+In registers \texttt{es:bx} we use the segment:offset addressing method to specify where in memory we want
+to store the data we read.
 
 \begin{lstlisting}[caption={Assembly to load the kernel}]
     mov ah, 0x02
@@ -146,3 +202,5 @@ exactly what it should do.
     xor bx, bx        ; Offset
     int 0x13
 \end{lstlisting}
+
+Finally, after having specified our parameters we can call \texttt{int 0x13} and let the BIOS do its job.
