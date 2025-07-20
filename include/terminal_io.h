@@ -13,5 +13,7 @@ void print(const char *message);
 void print_char(char c);
 void print_int(int num);
 char getchar(void);
+void clear_screen(void);
+void kprint(const char* str);
 
 #endif

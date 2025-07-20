@@ -376,3 +376,15 @@ int scanf(const char* fmt, ...) {
     va_end(args);
     return assigned;
 }
+
+void clear_screen() {
+    for (int i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
+        vga_buffer[i] = ' ' | (WHITE_ON_BLACK << 8);
+    }
+    cursor_x = 0;
+    cursor_y = 0;
+}
+
+void kprint(const char* str) {
+    printf("[KERNEL]: %s", str);
+}

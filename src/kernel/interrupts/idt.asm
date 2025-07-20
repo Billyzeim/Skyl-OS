@@ -1,4 +1,4 @@
-; idt.asm - IDT initialization with ISRs for IRQs 0–15 and ISR 0 (division by zero)
+; idt.asm - IDT initialization with ISRs for IRQs 0–15, ISR 0 (div zero), and ISR 14 (page fault)
 ; Compile with: nasm -f elf32 idt.asm -o idt.o
 
 section .text
@@ -13,9 +13,11 @@ global init_pic
 %assign i i+1
 %endrep
 
-; Declare ISR 0 (division by zero)
+; Declare ISR 0 (division by zero) and ISR 14 (page fault)
 extern isr_32
 global isr_32_asm
+extern isr_14
+global isr_14_asm
 
 ; ------------------------
 ; Initialize the PIC (8259A)
@@ -65,24 +67,31 @@ init_idt:
     xor eax, eax
     rep stosd
 
-; ------------------------
-; IRQs (INT 0x20–0x2F)
-; ------------------------
-%assign i 0
-%rep 16
-    mov eax, isr_ %+ i %+ _asm
-    mov ebx, (0x20 + i) * 8         ; IDT entry offset
+    ; IRQs (INT 0x20–0x2F)
+    %assign i 0
+    %rep 16
+        mov eax, isr_ %+ i %+ _asm
+        mov ebx, (0x20 + i) * 8
+        mov word [idt + ebx], ax
+        mov word [idt + ebx + 2], 0x08
+        mov word [idt + ebx + 4], 0x8E00
+        shr eax, 16
+        mov word [idt + ebx + 6], ax
+    %assign i i+1
+    %endrep
+
+    ; ISR 0: Division by Zero (INT 0x00)
+    mov eax, isr_32_asm
+    mov ebx, 0x00 * 8
     mov word [idt + ebx], ax
     mov word [idt + ebx + 2], 0x08
     mov word [idt + ebx + 4], 0x8E00
     shr eax, 16
     mov word [idt + ebx + 6], ax
-%assign i i+1
-%endrep
 
-; hereeeee: Division by zero handler (INT 0x00)
-    mov eax, isr_32_asm
-    mov ebx, 0x00 * 8               ; INT 0x00 = Division by zero
+    ; ISR 14: Page Fault (INT 0x0E)
+    mov eax, isr_14_asm
+    mov ebx, 0x0E * 8
     mov word [idt + ebx], ax
     mov word [idt + ebx + 2], 0x08
     mov word [idt + ebx + 4], 0x8E00
@@ -96,19 +105,22 @@ init_idt:
 ; ------------------------
 %assign i 0
 %rep 16
-isr_ %+ i %+ _asm:
-    cli
-    pushad
-    call isr_ %+ i
-    mov al, 0x20
-%if i >= 8
-    out 0xA0, al
-%endif
-    out 0x20, al
-    popad
-    iret
+    %if i != 14
+        isr_ %+ i %+ _asm:
+            cli
+            pushad
+            call isr_ %+ i
+            mov al, 0x20
+        %if i >= 8
+            out 0xA0, al
+        %endif
+            out 0x20, al
+            popad
+            iret
+    %endif
 %assign i i+1
 %endrep
+
 
 ; ------------------------
 ; ISR stub for Division by Zero (INT 0x00)
@@ -119,6 +131,26 @@ isr_32_asm:
     call isr_32
     popad
     iret
+
+; ------------------------
+; ISR stub for Page Fault (INT 0x0E)
+; ------------------------
+isr_14_asm:
+    cli
+    pushad
+
+    ; The CPU pushes error code after pushing EIP, CS, EFLAGS
+    ; So error code is on stack at [esp + 32] after pushad (8 registers * 4 bytes)
+
+    mov eax, [esp + 32]   ; get error code
+    push eax             ; push error code as argument
+    call isr_14
+    add esp, 4           ; clean up stack
+
+    popad
+    ; Halt or loop - do NOT iret
+    jmp $
+
 
 ; ------------------------
 ; IDT storage
