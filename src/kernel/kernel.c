@@ -12,7 +12,14 @@ void kernel_main() {
     while (i < 10) {
         int a = scanf("%d", &b);
         printf("You entered: %d\n", b);
-        printf("%d\n", a);
+        switch (b) {
+            case 2: __asm__ __volatile__("int $0x22"); break;
+            case 3: __asm__ __volatile__("int $0x23"); break;
+            case 4: __asm__ __volatile__("int $0x24"); break;
+            case 5: __asm__ __volatile__("int $0x25"); break;
+            // add more if needed
+            default: printf("whoops\n"); break;
+        }
         i++;
     }
     while(1);

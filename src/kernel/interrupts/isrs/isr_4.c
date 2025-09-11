@@ -3,6 +3,6 @@
 #include <isrs.h>
 
 void isr_4() {
-    print("\nInterrupt 4 was triggered and served successfully");
+    printf("Interrupt 4 was triggered and served successfully\n");
     return;
 }
