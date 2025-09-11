@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define WHITE_ON_BLACK 0x0F
-#define VGA_ADDRESS 0xB8000
+#define VGA_ADDRESS 0xB8000 // Memory-mapped address for VGA text mode
 #define VGA_WIDTH 80
 #define VGA_HEIGHT 25
 
@@ -203,7 +203,7 @@ void print(const char *str) {
 
 void print_char(char c) {
     static int cursor_x = 0, cursor_y = 0;
-    char *vidmem = VGA_ADDRESS;
+    char *vidmem = (char*)VGA_ADDRESS;  // Cast VGA_ADDRESS to char*
     int index = (cursor_y * VGA_WIDTH + cursor_x) * 2;
 
     if (c == '\n') {
