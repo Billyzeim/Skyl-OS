@@ -12,6 +12,8 @@ void kernel_main() {
     free_page(page1);
     void* page3 = alloc_page();
     printf("Reused page: %d\n", page3);
+    int a = 5;
+    printf("A resides at: 0x%x\n", &a);
 
     while(1);
 }
@@ -24,6 +26,8 @@ void kernel_low() {
     enable_paging(page_directory);
     kprint("Paging has been enabled\n");
     kprint("Jumped to high half kernel\n");
+    int a = 5;
+    printf("A resides at: 0x%x\n", &a);
     void *jmp_hh_kernel = (void*)(0xC0000000 + kernel_main); // Address of high half kernel
     asm volatile (
         "jmp *%0"
