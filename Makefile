@@ -68,9 +68,9 @@ $(BUILD_DIR)/bootloader/%.o: $(BOOTLOADER_SRC_DIR)/%.asm | $(BUILD_DIR)
 $(BUILD_DIR) $(DIST_DIR):
 	@mkdir -p $@
 
-# Run with QEMU
+# Run with QEMU (x86_64)
 run: $(OS_IMAGE)
-	qemu-system-i386 -drive format=raw,file=$<
+	qemu-system-x86_64 -drive format=raw,file=$<
 
 # Build all ELF32 objects from ASM sources
 asm-elf: $(KERNEL_ASM_OBJS) $(BOOTLOADER_ELF_OBJS)

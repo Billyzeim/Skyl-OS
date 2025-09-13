@@ -1,20 +1,39 @@
 #include <terminal_io.h>
+#include <paging.h>
+#include <allocators.h>
 
 void kernel_main() {
-    volatile unsigned short *video = (unsigned short*)0xB8000;
-    // Clear the screen (80x25 text mode: 80 columns, 25 rows)
-    for (int i = 0; i < 80 * 25; i++) {
-        video[i] = 0x0720;  // 0x07 (white on black) + 0x20 (space character)
-    }
-    int i  = 0;
-    int b = 0;
-    char * buf;
-    while (i < 10) {
-        int a = scanf("%d", &b);
-        printf("You entered: %d\n", b);
-        printf("%d\n", a);
-        i++;
-    }
+    kprint("Jump to higher half kernel completed\n");
+    printf("Value: %X\n", *(volatile unsigned int*)0xC0000000);
+    unmap_page(first_page_table, 0); // Reset the first page directory entry
+    reload_cr3(); // Reload CR3 to apply changes
+
+    printf("Value: %X\n", *(volatile unsigned int*)0xC0000000);
+    void* page1 = alloc_page();
+    void* page2 = alloc_page();
+    printf("Allocated pages at: %d and %d\n", page1, page2);
+
+    free_page(page1);
+    void* page3 = alloc_page();
+    printf("Reused page: %d\n", page3);
+
+    while(1);
+}
+
+void kernel_low() {
+    clear_screen();
+    kprint("Interrupts have been set up\n");
+    init_paging();
+    kprint("Paging has been initialized\n");
+    enable_paging(page_directory);
+    kprint("Paging has been enabled\n");
+    kprint("Jumped to high half kernel\n");
+    void *jmp_hh_kernel = (void*)(0xC0000000 + kernel_main); // Address of high half kernel
+    asm volatile (
+        "jmp *%0"
+        :
+        : "r"(jmp_hh_kernel)
+    );
     while(1);
     return;
 }
