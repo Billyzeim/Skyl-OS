@@ -203,7 +203,7 @@ void print(const char *str) {
 
 void print_char(char c) {
     static int cursor_x = 0, cursor_y = 0;
-    char *vidmem = VGA_ADDRESS;
+    char *vidmem = (char *)VGA_ADDRESS;
     int index = (cursor_y * VGA_WIDTH + cursor_x) * 2;
 
     if (c == '\n') {

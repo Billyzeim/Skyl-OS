@@ -1,6 +1,6 @@
 #include <stdint.h>
 
-#include <stdint.h>
+#include <terminal_io.h>
 
 // Assume you have a simple VGA text output function like putchar or printf.
 // If not, you can use direct memory writes to 0xB8000 (text mode).
