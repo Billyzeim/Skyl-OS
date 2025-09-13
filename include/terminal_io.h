@@ -15,5 +15,6 @@ void print_int(int num);
 char getchar(void);
 void clear_screen(void);
 void kprint(const char* str);
+int scanf(const char* fmt, ...);
 
 #endif

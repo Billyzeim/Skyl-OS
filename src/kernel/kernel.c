@@ -8,7 +8,7 @@ void kernel_main() {
     unmap_page(first_page_table, 0); // Reset the first page directory entry
     reload_cr3(); // Reload CR3 to apply changes
 
-    printf("Value: %X\n", *(volatile unsigned int*)0xC0000000);
+    // printf("Value: %X\n", *(volatile unsigned int*)0xC0000000);
     void* page1 = alloc_page();
     void* page2 = alloc_page();
     printf("Allocated pages at: %d and %d\n", page1, page2);
@@ -16,6 +16,13 @@ void kernel_main() {
     free_page(page1);
     void* page3 = alloc_page();
     printf("Reused page: %d\n", page3);
+
+    int a;
+    while (1) {
+        printf("Enter a number: ");
+        scanf("%d", &a);
+        printf("\nYou entered: %d\n", a);
+    }
 
     while(1);
 }
