@@ -34,3 +34,7 @@ void unmap_page(uint32_t* pd, uint32_t index) {
         pd[index] = 0x00000002; // Reset the page directory entry
     }
 }
+
+void reload_cr3() {
+    asm volatile("mov %0, %%cr3" :: "r"(page_directory) : "memory");
+}
