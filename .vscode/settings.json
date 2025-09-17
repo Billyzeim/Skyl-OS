@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "terminal_io.h": "c",
+        "allocators.h": "c"
+    }
+}
