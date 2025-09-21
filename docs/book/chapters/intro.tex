@@ -1,83 +1,89 @@
 \chapter{Introduction}
 
-Welcome to my journey of writing an operating system from scratch... and hopefully not going insane in the process.
-My hope is that this book will bring some of you along for this ride and help you learn from — and hopefully avoid — my mistakes. 
+Welcome to this journey of writing an operating system kernel from scratch... and, with some optimism, not going insane in the 
+process. This book encourages you to explore how kernels work, help you learn from my experience, and 
+perhaps even avoid some of my mistakes. 
 
-When I started studying about operating systems (no earlier than 4 months ago) I found very few sources, most of which
-claim OS development is a dark path mere mortals should avoid.
-And me being the optimist I am, I denied this fate and walked down that path only to find out they were pretty... well, right.
+When I started studying operating systems, I found very few resources, most of which warned that
+OS development is so challenging a subject that should be avoided by anyone lacking extensive experience
+in low-level systems programming. Being the optimist I am, I ignored the warnings and dove in, only to discover 
+that they were, well… pretty much right.
 
-However, the majority of obstacles I have encountered are immediately correlated with the lack of resources.
-I am not sure whether this scarcity is due to financial incentives or the genuine difficulty of the field, 
-but it undeniably slows down potential progress.
+However, the majority of obstacles I have encountered stem directly from a lack of resources.
+It is unclear whether this scarcity arises from financial incentives or the inherent difficulty of the field, 
+but it undeniably prohibits many engineers from studying OS kernels and potentially gainning expertise.
 
-This book will contain what I have learned so far and explain my mental process. I have found following someone's
-learning experience can ease the beginner's struggle. The reader can overcome common challenges by following the 
-thought process someone else used to tackle them. However, all material should be accompanied by
-hands-on experience for best understanding.
+This book presents what I have learned so far and explains the reasoning behind my approach. Following someone else's 
+streamlined learning journey can enhance and accelerate your own understanding and help avoid common pitfalls.
+
+That said, this book seeks to make OS development accessible to beginners while acknowledging and engaging with the 
+field's inherent complexity.
 
 \section{Why Write Your Own OS?}
 
-Studying Operating Systems is challenging but trying to implement one is a totally different beast. Even realizing how to
-start studying could critically discourage many people. 
-Therefore, diving into OS development definitely requires some "getting your hands dirty" to understand.
+Studying Operating Systems is challenging enough on its own but engineering one from the kernel upward adds vast layer of
+complexity. Determining an initial approach to the subject can be challenging enough to discourage many beginners. 
+Ultimately, diving into OS development requires a willingness to get your hands dirty and learn by doing.
 
-In the process there is definitely an overwhelming amount of low-level detail you could encounter, 
-but there is luckily as much to gain in knowledge. From how a bootloader works to how the hardware of your computer is wired
-together to perform basic tasks like handling signals of peripheral devices or doing math, how much there is to learn is only 
-limited by your determination. After finishing this project you will walk out a totally different person: a low-level developer
-or even engineer, dare I say. 
+The low-level nature of OS development guarantees that many obstacles will inevitably arise. 
+Yet beyond the theoretical knowledge, the field offers a wealth of engineering skills to be acquired. 
+From understanding how a bootloader works to uncovering how hardware orchestrates basic tasks-such as handling 
+signals from peripheral devices or performing arithmetic-the amount to learn is limited only by your determination. 
+By the time you finish this project, you will emerge as a fundamentally different person: a low-level developer-or 
+perhaps even an engineer, dare I say.
 
 \section{What You'll Learn}
 
 \begin{itemize}
-  \item How bootloaders work and how to build one
-  \item What real mode and protected mode is
-  \item Writing a memory manager
-  \item Implementing syscalls
+  \item Bootloader basics
+  \item Transitioning from real mode to protected mode
+  \item CPU operating modes
+  \item Interrupts and the Interrupt Descriptor Table (IDT)
+  \item Memory management and paging
+  \item Process management and context switching
+  \item User and kernel modes
 \end{itemize}
 
 \section{Who This Book Is For}
 
-By now you should know that the purpose of this book is to make diving into OS development a little more beginner friendly.
-When writing this book I mainly give my own perspective, as an Electrical Engineering and Computer Science student, therefore
-I mainly imagine myself addressing people of virtually my technical background and knowledge. 
+By now, it should be clear that the purpose of this book is to make diving into OS development a bit more-beginner friendly.
+I write primarily from my own perspective as an Electrical Engineering and Computer Science student, and I imagine addressing 
+readers with a similar technical background and level of knowledge.
 
-However, I believe that this project will also benefit hobbyists and professors looking to incorporate low-level
-OS development into their courses, by helping them understand what challenges students might face while studying this
-subject and providing a simple enough prototype which students can understand, replicate or iterate on.
+Nevertheless, this project also aims to benefit engineers transitioning into the field, as well as professors seeking to 
+incorporate OS kernel development into their courses. It doThat said, this book should bring OS development closer to beginners, but it does not shy away from the 
+inherent complexity of the subject.
+es so by highlighting the challenges students are likely to face 
+and by providing a simple prototype that can be understood, replicated, or built upon.
 
 \section{What You Should Already Know}
 
-As was mentioned above I, myself, have some technical background. Although I am not an expert it would surely help
-if the readers of this book had a level of understanding similar to or greater than mine.
+As was mentioned above, I had some technical background before entering the field.
+Below you can find a brief summary of my experience at the time I started this project.
 
 More specifically I had experience in:
 \begin{itemize}
     \item High-level C programming
-    \item Minimal understanding of assembly
-    \item Basic hardware knowledge and how components interact
-    \item Introductory digital design
+    \item Basic understanding of assembly
+    \item Introductory digital design and computer architecture
+    \item Theoretical understanding of operating systems
+    \item Tools such as Git, Make and gcc
   \end{itemize}
-
-Understanding the material of this book should require some familiarity with the above.
 
 \section{How To Approach This Book}
 
-While reading this book you will find that you and I have a slightly different way of understanding things,
-simply because that is statistically true. When I started implementing things, nothing worked. 
-My study process was chaotic due to the lack of structured resources. Most of my progress came from repeated 
-trial — and more importantly — error.
+Most people approach complex subjects in fundamentally different ways. It should be clear that everyone 
+will struggle in different areas, and this should never discourage you. Working through a structured 
+resource can greatly help in overcoming those initial difficulties.
 
-Having said that, I hope it is clear that we will struggle in slightly different things for slightly
-different reasons and this should not discourage you at all. When (not if) times get tough feel free 
-to reach out to me, a contributor, or one of your professors to help clarify misunderstandings.
+When-not if-times get tough, don't hesitate to reach out to me, a contributor, or one of your professors 
+for help in clarifying misunderstandings.
 
 \section{Book Structure and Approach}
 
 This book follows the narrative of my own development journey. In each stage of building the operating 
-system, I had to make structural and architectural decisions. In the first chapters, I’ll walk you through 
+system, I faced structural and architectural decisions. In the first chapters, I'll walk you through 
 the reasoning behind my choices — from setting up a simple bootloader and transitioning from 16-bit to 
-32-bit protected mode, to handling interrupts and implementing memory management. These early chapters 
-favor simplicity and clarity. Later on, we’ll explore more complex or alternative designs, compare 
-architectures, and analyze the trade-offs behind them.
+32-bit protected mode, to handling interrupts and implementing memory and process management. These early 
+chapters emphasize on simplicity and clarity. After finishing the implementation of the designs decided we 
+will explore more complex or alternative designs, compare architectures, and analyze the trade-offs they involve.
