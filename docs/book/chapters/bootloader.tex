@@ -1,70 +1,70 @@
 \chapter{Bootloader}
 
-If you are stil here... buckle up. In this chapter we will familiarize ourselves with some concepts necessary to understand bootloaders
-and then start writting our own.
+In this chapter some fundamental concepts to the functioning of a bootloader will be explained and used in practice to load a
+placeholder kernel.
 
-Before we start it should be made clear that everything below applies to the Intel i-386 processor architecture (32-bit x86).
-However, transferring that knowledge to different architectures should not be that difficult
+Before we start it should be made clear that everything below applies to 32-bit, x86 architecture processors.
+The majority of the following concepts, however, are transferable to other common architectures.
 
-\section{CPU Operating Modes}
+\section{Booting in Real Mode}
 
-When the computer turns on the x86 processor is automatically in \textbf{Real Mode}, which has some significant limitations. However,
-it is kept even in newer processors for backwards compatibility reasons. 
+When the computer turns on the x86 processor automatically enters \textbf{Real Mode}, which poses some significant limitations.
+Newer processors still support Real Mode to ensure backward compatibility, although it is now considered obsolete.
 
-When in Real Mode the CPU is running by default in 16-bit mode. While 32-bit registers are technically still available they 
-should not be used, except when changing to Protected Mode (32-bit mode).
+When in Real Mode the CPU is running by default in 16-bit mode, meaning we are expected to use 16-bit registers for our operations.
+While 32-bit registers are technically still available and can be utilized on newer machines their usage is advised against 
+for most beginner applications. Switching to 32-bit Protected Mode is an exception to this, as we will see later.
 
 Another limitation of Real Mode is that you only have access to a specific size of memory. When referring to a memory 
 address in Real Mode we use a 20-bit physical addressing. The Physical Address is referred to using a Segment and Offset like this: 
 \[
 \textbf{PA = Segment} \cdot \textbf{16 + Offset}
 \]
-Essentially, using this convention you can only represent a number if it can fit in a 5 digit hex. It is also apparent that
+The CPU fetches the Segment value from a 16-bit segment register and the Offset value from a 16-bit address register.
+
+Essentially, by using this convention we can only represent numbers that fit in a 5 digit hex. It is also apparent that
 there are multiple ways to represent the same address. For example the physical address 0x12345 can be represented 
 by 0x1234 and 0x0005, 0x1230 and 0x0045, 0x1200 and 0x0345... and so on. This way of addressing memory limits us to just 
 below 1MiB of memory.
 
-By now it should be clear that the addresses used in Real Mode are the actual physical addresses. This hinders us from protecting
-memory and defining its owenership because every process can simply access all memory segments. We will get into virtual memory 
-later on this book but we will give a brief explaination of how it helps with owenership just to clarify why physical 
-addresses are limiting.
+By now it should be clear that the addresses used in Real Mode refer to physical addresses. This hinders us from protecting
+memory and defining its owenership because no process is prohibitted form accessing any memory segments. Virtual memory
+will be discussed later on this book but a brief explaination of how it helps with owenership is given just to clarify 
+why physical addressing is limiting.
 
-When having virtual addresses, our Operating System is responsible of mapping every virtual address to a physical onen.
-When this mappning is done, the operating systems ensures that each program has its own range of physical addresses.
-When two programs refer to the same virtual memory, very little does it matter, since the mapping will make sure they 
-will refer to totally different physical addresses, rendering both unable to access eachothers' memory.
+When using virtual addresses, our Operating System is responsible of mapping every virtual address to a physical one.
+By this mapping, the operating systems ensures that each program has its own range of physical addresses.
+When two programs refer to the same virtual memory, very little does it matter, since they are translated into 
+totally different physical addresses, rendering both unable to access eachothers' memory.
 
 Having said that, Real Mode is simply inadequate for modern systems. This is why engineers came up with another CPU 
-Operation Mode called \textbf{Protected Mode}. In this mode, while we still do not have any virtualization, we can 
-take advantage of how memory is segmented to protect critical data from the user. This can happen by defining different 
-memory segments with different privileges (ring levels) and letting the CPU decide if a piece of code has the privilages 
-it tries to claim. This is decided according to the segment through which we are accessing that memory (we will se that in
-practice). Memory management and CPU Operating Modes will have chapters of their own later in this book so we will not 
-elaborate any longer here. For now let's focus on what a bootloader is and what it needs to do in its short but 
-critical lifespan. 
+Operation Mode called \textbf{Protected Mode}. In this mode, while there is no virtualization by default, we can 
+take advantage of how memory is segmented to protect critical data from the user. This is achieved by defining different 
+memory segments with different privileges (ring levels). The CPU decides if a piece of code has the privilages 
+it tries to claim. This is determined by the segment through which we are accessing that memory (we will se that in
+practice). Memory management and CPU Operating Modes will have chapters of their own later in this book.
 
 \section{The Role Of The Bootloader}
 
-When the computer turns on the first program to take control is the BIOS. Among other things, the BIOS transfers control to 
-the bootloader which is then responsible for loading the OS. Modern systems use UEFI but in the sake of simplicity we 
-will focus on BIOS.
+When the computer turns on the first program to take control is the BIOS. Among other things that do not concern us in 
+this section, the BIOS transfers control to the bootloader which is then responsible for loading the OS. Modern systems 
+use UEFI insted to overcome some limitations of the BIOS but for educational purposes we will focus on BIOS.
 
 First, the BIOS scans the data storage devices. More precisely it checks the first 512 bytes of each one, namely the Master Boot Record 
-(MBR), which is the place a bootloader conventionally resides upon. If the last two bytes of the MBR are the word 0xAA55 the BIOS 
-classifies the storage device as a bootable device.
+(MBR), which is the memory a bootloader conventionally resides upon. If the last two bytes of the MBR are the word 0xAA55 the BIOS 
+identifies the storage device as a bootable device.
 
-Once the bootable is identified the BIOS loads the bootloader from the MBR to the memory address 0x7C00. This address has been
+Once the bootable is determined, the BIOS loads the bootloader from the MBR to the memory address 0x7C00. This address has been
 traditionally used by BIOS software to load the bootloader. Bootloader developers conventionally assume this is where their 
-bootloader will is be loaded. The address 0x7C00 is way below the 1MiB accessible range and still leaves space below 
-it for interrupt vectors (we will talk about them later).
+bootloader will is be loaded to ensure compatibility. The address 0x7C00 is way below the 1MiB accessible range and still leaves 
+space below it for the interrupt vectors (we will talk about them later).
 
-After control has been passed to the bootloader it is now its job to load the rest of the operating systems. In later section we will 
-discuss some techniques to overcome the 512-byte barrier and the limitations of the Real Mode. For now let's take a look in how
-we can load the kernel.
+After control has been transfered to the bootloader it is now its job to load the kernel. In a later section 
+we will suggest some techniques to overcome the 512-byte barrier and the limitations of the Real Mode. 
 
 \section{Loading The Kernel}
 
-Let's start by dumping some code. Please do not be overwhelmed by it as we will explain it thoroughly shortly after.
+We can start by dumping some code. Please do not be overwhelmed by it; we will explain it thoroughly shortly after.
 
 \begin{lstlisting}[caption={Simple bootloader start in assembly}]
 [ORG 0x7C00] ; This is where the bootloader is loaded in memory
@@ -93,11 +93,12 @@ start:
     
 Let's analyze this line by line. 
 
-First of all \texttt{cli} is used to prevent the system from triggering interrupts.
-Since we have not dealt with setting up interrupt handling yet, they will just cause problems.
+First of all, \texttt{cli} is used to prevent the system from triggering maskable interrupts,
+requests for the CPU to stop what it is doing and execute some other instructions.
+Since interrupt handling has not been set up yet, they will just cause problems.
 
 In lines 6 to 8 we are setting up a simple stack for our Real Mode. To understand these lines we must
-remember how we address physical memory in Real Mode. It our Stack Segment pointer (ss) we choose segment \texttt{0x0700}
+remember how physical memory is addressed in Real Mode. It our Stack Segment pointer (ss) we choose segment \texttt{0x0700}
 and in our Stack Pointer (sp) we define the offset \texttt{0x0000}. Now the physical address is calculated as such:
 \[
 \textbf{PA = 0x0700} \cdot \textbf{16 + 0x0000}
@@ -109,12 +110,11 @@ As mentioned, there are other combinations that could address the same memory as
 Note that the bootloader might still run without lines 6 to 11, however, without having the stack set up
 and the ax, ds and es registers zeroed-out the environment would be highly unpredictable.
 
-Now that we are in a controllable environment we can load our kernel into memory. To do this we will must use
-a very useful feature of BIOS, BIOS interrupts. Since we have not explained interrupts yet, we can think of them
-as favors. More specifically when we trigger a BIOS interrupt we stop the execution of anything else, as the name states,
-and have BIOS do what we ask. In this occasion by calling \texttt{int 0x13} we ask the BIOS to load some data from our
-hard drive into our memory. However, before triggering the interrupt we must pass some parameters using some registers to 
-tell BIOS exactly what it should do.
+Now, being in a controllable environment we can load our kernel into memory. This is where BIOS interrupts become useful.
+Since interrupts have not been explained yet, we can think of them as favors. More specifically when a BIOS interrupt is triggered 
+CPU halts the execution of anything else, as the name suggests, and serves the request of the BIOS interrupt. In this occasion by 
+calling \texttt{int 0x13} we ask the BIOS to load some data from our hard drive into our memory. However, before triggering 
+the interrupt we must pass some parameters through registers.
 
 \begin{table}[h]
     \centering
@@ -135,12 +135,12 @@ tell BIOS exactly what it should do.
     
 Since interrupt \texttt{0x13} provides multiple storage device related function we can use the \texttt{ah} register
 to choose the \texttt{Read Sectors From Drive} function.
-In the \texttt{al} register we can define the number of sectors (512-byte unit) we want to read. For simplicity
+In the \texttt{al} register we can define the number of sectors (512-byte units) we want to read. For simplicity
 we will initially be reading just one.
 
 Before understanding what registers \texttt{ch}, \texttt{cl} and \texttt{dl} we need to introduce a new addressing
 model called \textbf{Cylinder-Head-Sector} (or CHS). As the name states, this model mirrors the concept of physical 
-cylinders, heads and sectors a traditional hard drive uses. 
+cylinders, heads and sectors traditional hard drives use. 
 
 \begin{figure}[H]
     \centering
@@ -150,20 +150,20 @@ cylinders, heads and sectors a traditional hard drive uses.
 \end{figure}
 
 As shown above, hard drives are constituted of platters which are essentially circular disks. On both surfaces
-of these platters - both the top and bottom - data can be written magnetically by a device called head. So for 
+of these platters - both top and bottom - data can be written magnetically by a device called head. So for 
 4 platters we have 8 heads. 
 
 Now imagine multiple cylinders with centers aligned with the platters'. The intersection of a platter's surface 
 and a cylinder is called a track. Naturally we have \(\textbf{Cylinders} \cdot \textbf{Platters} \cdot \textbf{2}\)
 number of tracks. Each track can be accessed by only one head.
 
-Each track is divided into sectors, which we can visualize as circular sectors. Each sector is the smallest addressable
-unit and has a size of 512 bytes.
+Each track is divided into sectors, which we can visualize as circular sectors. Each sector defines the smallest addressable
+unit upon a track which has a size of 512 bytes.
 
 When writting data to a hard drive we must specify the cylinder, the head and the sector along the track defined by the
 cylinder and the head's surface. Each combination of CHS maps to a 512-byte unit or more precisely a Logical Block 
 Address (LBA). First, we write data in cylinder 0, head 0, and sector 1 (sectors start counting from number 1). As we 
-fill in sectors until sector 63 we can start filling up heads. When head 255 is filled, we fill in cylinder. The 
+fill up all sectors up to sector 63 we can start filling up heads. When head 255 is filled, we start filling up cylinders. The 
 last available cylinder is 1023. 
 
 \begin{itemize}
@@ -172,7 +172,7 @@ last available cylinder is 1023.
     \item \textbf{63}: Sectors (1–63, 6 bits), \textit{1-based indexing}
     \item \textbf{512}: Bytes per sector
 \end{itemize}
-  
+
 Since CHS is limited at addressing 8.4 GiB of data it has been declared obsolete and replaced by direct LBA addressing.
 However, the BIOS still offers this function.
 
@@ -204,3 +204,13 @@ to store the data we read.
 \end{lstlisting}
 
 Finally, after having specified our parameters we can call \texttt{int 0x13} and let the BIOS do its job.
+
+% Potential additions:
+% Segment registers reference table.
+% MBR 512-byte size and boot signature.
+% A20 line mention.
+% Disk read error handling.
+% Print message with INT 0x10.
+% Exercises: load multiple sectors, dump kernel bytes.
+% Protected Mode teaser.
+% Historical perspective.

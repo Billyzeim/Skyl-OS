@@ -6,6 +6,6 @@
 \contentsline {section}{\numberline {1.5}How To Approach This Book}{2}{section.1.5}%
 \contentsline {section}{\numberline {1.6}Book Structure}{3}{section.1.6}%
 \contentsline {chapter}{\numberline {2}Bootloader}{5}{chapter.2}%
-\contentsline {section}{\numberline {2.1}CPU Operating Modes}{5}{section.2.1}%
+\contentsline {section}{\numberline {2.1}Booting in Real Mode}{5}{section.2.1}%
 \contentsline {section}{\numberline {2.2}The Role Of The Bootloader}{6}{section.2.2}%
 \contentsline {section}{\numberline {2.3}Loading The Kernel}{6}{section.2.3}%
