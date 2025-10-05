@@ -15,7 +15,7 @@ When in Real Mode the CPU is running by default in 16-bit mode, meaning we are e
 While 32-bit registers are technically still available and can be utilized on newer machines their usage is advised against 
 for most beginner applications. Switching to 32-bit Protected Mode is an exception to this, as we will see later.
 
-Another limitation of Real Mode is that you only have access to a specific size of memory. When referring to a memory 
+Another limitation of Real Mode is that we only have access to a specific size of memory. When referring to a memory 
 address in Real Mode we use a 20-bit physical addressing. The Physical Address is referred to using a Segment and Offset like this: 
 \[
 \textbf{PA = Segment} \cdot \textbf{16 + Offset}
@@ -27,15 +27,16 @@ there are multiple ways to represent the same address. For example the physical 
 by 0x1234 and 0x0005, 0x1230 and 0x0045, 0x1200 and 0x0345... and so on. This way of addressing memory limits us to just 
 below 1MiB of memory.
 
-By now it should be clear that the addresses used in Real Mode refer to physical addresses. This hinders us from protecting
-memory and defining its owenership because no process is prohibitted form accessing any memory segments. Virtual memory
-will be discussed later on this book but a brief explaination of how it helps with owenership is given just to clarify 
-why physical addressing is limiting.
+It should be made clear that the addresses used in Real Mode refer to physical addresses. This hinders us from protecting
+memory and defining its owenership because no process is prohibitted from accessing any memory segments.
+This problem could be overcome by using a Global Descriptor Table in Protected Mode, however, for the purpose of this book we 
+will adopt virtual memory via paging as a more modern approach. Virtual memory, along with paging, will be discussed later in this 
+book but a brief explanation of how it helps with memory safety is given just to clarify why physical addressing is limiting.
 
 When using virtual addresses, our Operating System is responsible of mapping every virtual address to a physical one.
 By this mapping, the operating systems ensures that each program has its own range of physical addresses.
 When two programs refer to the same virtual memory, very little does it matter, since they are translated into 
-totally different physical addresses, rendering both unable to access eachothers' memory.
+totally different physical addresses by the operating system, rendering both unable to access eachothers' memory space.
 
 Having said that, Real Mode is simply inadequate for modern systems. This is why engineers came up with another CPU 
 Operation Mode called \textbf{Protected Mode}. In this mode, while there is no virtualization by default, we can 
@@ -59,8 +60,24 @@ traditionally used by BIOS software to load the bootloader. Bootloader developer
 bootloader will is be loaded to ensure compatibility. The address 0x7C00 is way below the 1MiB accessible range and still leaves 
 space below it for the interrupt vectors (we will talk about them later).
 
+% MBR Structure diagram
+
 After control has been transfered to the bootloader it is now its job to load the kernel. In a later section 
 we will suggest some techniques to overcome the 512-byte barrier and the limitations of the Real Mode. 
+
+\section{Utilizing BIOS Interrupts}
+
+TODO
+
+% Briefly explain what interrupts are
+% Explain BIOS interrupts 
+% Explain how to call an interrupt and pass parameters
+% Give INT 0x10 and INT 0x13 as examples
+% Explain IVT and give IVT table layout
+
+\section{LBA vs CHS Addressing}
+
+TODO
 
 \section{Loading The Kernel}
 
@@ -109,6 +126,8 @@ This address is chosen to be more than 512 bytes below \texttt{0x7C00}, the rang
 As mentioned, there are other combinations that could address the same memory as well.
 Note that the bootloader might still run without lines 6 to 11, however, without having the stack set up
 and the ax, ds and es registers zeroed-out the environment would be highly unpredictable.
+
+% Refine the paragraph below according to section on interrupts.
 
 Now, being in a controllable environment we can load our kernel into memory. This is where BIOS interrupts become useful.
 Since interrupts have not been explained yet, we can think of them as favors. More specifically when a BIOS interrupt is triggered 
@@ -184,7 +203,7 @@ So we can set our cylinder to 0, our head to 0 and our sector to 2. Be careful w
 as their 2 high bits are defined in bits 6 and 7 of \texttt{cl}.
 
 In the register \texttt{dl} we must specify the storage unit which we want to read data from.
-Options \texttt{0x00} to \texttt{0x7F} correspond to floppy dics, while options \texttt{0x80} and higher
+Options \texttt{0x00} to \texttt{0x7F} correspond to floppy discs, while options \texttt{0x80} and higher
 correspond to hard drives.
 
 In registers \texttt{es:bx} we use the segment:offset addressing method to specify where in memory we want
@@ -204,6 +223,12 @@ to store the data we read.
 \end{lstlisting}
 
 Finally, after having specified our parameters we can call \texttt{int 0x13} and let the BIOS do its job.
+
+% After relocating the CHS to its dedicated section, explain error handling
+
+\section{Two-Stage Bootloaders}
+
+TODO
 
 % Potential additions:
 % Segment registers reference table.
