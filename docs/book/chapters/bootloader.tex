@@ -55,29 +55,153 @@ First, the BIOS scans the data storage devices. More precisely it checks the fir
 (MBR), which is the memory a bootloader conventionally resides upon. If the last two bytes of the MBR are the word 0xAA55 the BIOS 
 identifies the storage device as a bootable device.
 
-Once the bootable is determined, the BIOS loads the bootloader from the MBR to the memory address 0x7C00. This address has been
-traditionally used by BIOS software to load the bootloader. Bootloader developers conventionally assume this is where their 
-bootloader will is be loaded to ensure compatibility. The address 0x7C00 is way below the 1MiB accessible range and still leaves 
-space below it for the interrupt vectors (we will talk about them later).
+Once the bootable is determined control is transfered to the Stage-1 bootloader, located in the first 446 bytes of the MBR.
+In advanced operating systems the Stage-1 bootloader reads the partition table, located in the next 64 bytes of the MBR.
+This table contains four entries of 16 bytes each. Each entry describes a partition in the storage device. When the Stage-1
+bootloader finds the active (bootable) partition it loads the volume boot sector of that partition (VBR) into memory and transfers
+control to it. The VBR contains infromation about the file system of that partition and the next stage of bootloading, which can differ
+between operating systems. However, for simplicity, in this chapter we will assume that the Stage-1 bootloader loads the kernel directly 
+from the MBR.
 
-% MBR Structure diagram
+Below is a table describing the layout of the MBR.
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.15}
+    \begin{tabular}{|c|c|c|c|}
+    \hline
+    \textbf{Region} & \textbf{Offset (bytes)} & \textbf{Size} & \textbf{Notes} \\
+    \hline
+    Boot code \& data & \texttt{0x000}–\texttt{0x1BD} & 446 B & Stage-1 bootloader \\
+    \hline
+    Partition table entry \#1 & \texttt{0x1BE}–\texttt{0x1CD} & 16 B & Status, CHS/LBA, sectors \\
+    \hline
+    Partition table entry \#2 & \texttt{0x1CE}–\texttt{0x1DD} & 16 B & Status, CHS/LBA, sectors \\
+    \hline
+    Partition table entry \#3 & \texttt{0x1DE}–\texttt{0x1ED} & 16 B & Status, CHS/LBA, sectors \\
+    \hline
+    Partition table entry \#4 & \texttt{0x1EE}–\texttt{0x1FD} & 16 B & Status, CHS/LBA, sectors \\
+    \hline
+    Boot signature & \texttt{0x1FE}–\texttt{0x1FF} & 2 B & \texttt{Contains the word 0x55AA} \\
+    \hline
+    \end{tabular}
+    \caption{Master Boot Record (512 bytes) layout.}
+\end{table}
+    
+For the bootloader to run the BIOS loads the it from the MBR to the memory address 0x7C00. This address has been
+traditionally used by BIOS software to load the bootloader. Bootloader developers assume this is where their 
+bootloader will be loaded to ensure compatibility. The address 0x7C00 is ideal since it is way below the 1MiB 
+accessible range and still leaves space below it for the interrupt vectors (they will be covered soon).
 
 After control has been transfered to the bootloader it is now its job to load the kernel. In a later section 
 we will suggest some techniques to overcome the 512-byte barrier and the limitations of the Real Mode. 
 
+To complete the picture, below is a table describing the layout of a partition table entry.
+Some concepts in the table will be explained later in this chapter.
+
+\begin{table}[h]
+    \centering
+    \renewcommand{\arraystretch}{1.15}
+    \setlength{\tabcolsep}{10pt}
+    
+    \begin{tabular}{|c|c|p{7cm}|}
+    \hline
+    \textbf{Bytes} & \textbf{Field} & \textbf{Description} \\
+    \hline
+    Byte 0 & Status & 
+    \texttt{0x80} = bootable; \texttt{0x00} = non-bootable. Indicates if this partition is active (bootable). \\
+    \hline
+    Bytes 1-3 & First CHS & 
+    Starting Cylinder-Head-Sector address (legacy BIOS format). Retained for backward compatibility; often ignored. \\
+    \hline
+    Byte 4 & Type & 
+    Partition type identifier (e.g., \texttt{0x0B} = FAT32, \texttt{0x07} = NTFS). \\
+    \hline
+    Bytes 5-7 & Last CHS & 
+    Ending Cylinder-Head-Sector address (legacy). Used by old BIOS systems. \\
+    \hline
+    Bytes 8-11 & First LBA & 
+    Logical Block Address (LBA) of the first sector of the partition. Modern OSes use this instead of CHS. \\
+    \hline
+    Bytes 12-15 & Total Sectors & 
+    Number of sectors in the partition (counted from First LBA). Determines partition size. \\
+    \hline
+    \end{tabular}
+    \caption{Structure of a Partition Table Entry (16 bytes total).}
+\end{table}
+
 \section{Utilizing BIOS Interrupts}
 
-TODO
+Before we can load our kernel we must understand how to interact with the BIOS. The BIOS exposes a set of
+interrupts that we can use to perform basic I/O operations.
 
-% Briefly explain what interrupts are
-% Explain BIOS interrupts 
-% Explain how to call an interrupt and pass parameters
+Interrupts are usually defined as signals sent to the CPU to indicate that an event needs immediate attention.
+When an interrupt is triggered the CPU stops what it is doing and executes a handler function to deal with the event.
+Interrups are devided into software and hardware interrupts. Software interrupts are triggered by software instructions, 
+while hardware are triggered by signals sent by hardware devices.
+
+In our case we will be using software interrupts to request services from the BIOS. Such services include reading from
+storage devices, printing to the screen and reading from the keyboard. For example the BIOS interrupt \texttt{0x10}
+offers video services.
+
+In order to specify which function of the interrupt we want to use, we can pass parameters through CPU registers.
+For example, to print a character to the screen using BIOS interrupt \texttt{0x10} we can use the teletype output function
+by setting the \texttt{ah} register to \texttt{0x0E} and the \texttt{al} register to the ASCII value of the character we want
+to print. Finally, we can trigger the interrupt using the \texttt{int} instruction.
+
+\begin{lstlisting}[caption={Simple BIOS interrupt call in assembly}]
+    mov ah, 0x0E      ; BIOS function: teletype output
+    mov al, 'A'       ; Character to print
+    mov bh, 0x00      ; Page number
+    mov bl, 0x07      ; Text color (white)
+    int 0x10          ; Call BIOS video interrupt
+\end{lstlisting}
+
 % Give INT 0x10 and INT 0x13 as examples
 % Explain IVT and give IVT table layout
 
 \section{LBA vs CHS Addressing}
 
-TODO
+Before understanding how the bootloader will load our kernel we need to introduce a new addressing
+model called \textbf{Cylinder-Head-Sector} (or CHS). As the name states, this model mirrors the concept of physical 
+cylinders, heads and sectors traditional hard drives use. 
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.4\textwidth]{images/chs_diagram.png}
+    \caption{CHS addressing layout: cylinders, heads, and sectors}
+    \label{fig:chs}
+\end{figure}
+
+As shown above, hard drives are constituted of platters which are essentially circular disks. On both surfaces
+of these platters - both top and bottom - data can be written magnetically by a device called head. So for 
+4 platters we have 8 heads. 
+
+Now imagine multiple cylinders with centers aligned with the platters'. The intersection of a platter's surface 
+and a cylinder is called a track. Naturally we have \(\textbf{Cylinders} \cdot \textbf{Platters} \cdot \textbf{2}\)
+number of tracks. Each track can be accessed by only one head.
+
+Each track is divided into sectors, which we can visualize as circular sectors. Each sector defines the smallest addressable
+unit upon a track which has a size of 512 bytes.
+
+When writting data to a hard drive we must specify the cylinder, the head and the sector along the track defined by the
+cylinder and the head's surface. Each combination of CHS maps to a 512-byte unit or more precisely a Logical Block 
+Address (LBA). First, we write data in cylinder 0, head 0, and sector 1 (sectors start counting from number 1). As we 
+fill up all sectors up to sector 63 we can start filling up heads. When head 255 is filled, we start filling up cylinders. The 
+last available cylinder is 1023. 
+
+\begin{itemize}
+    \item \textbf{1024}: Cylinders (0–1023, 10 bits)
+    \item \textbf{256}: Heads (0–255, 8 bits)
+    \item \textbf{63}: Sectors (1–63, 6 bits), \textit{1-based indexing}
+    \item \textbf{512}: Bytes per sector
+\end{itemize}
+
+Since CHS is limited at addressing 8.4 GiB of data it has been declared obsolete and replaced by direct LBA addressing.
+However, the BIOS still offers this function.
+
+Also, note that modern hard drives do not expose their geometrical structure and instead use an emulation layer for
+CHS addressing.
 
 \section{Loading The Kernel}
 
@@ -127,13 +251,9 @@ As mentioned, there are other combinations that could address the same memory as
 Note that the bootloader might still run without lines 6 to 11, however, without having the stack set up
 and the ax, ds and es registers zeroed-out the environment would be highly unpredictable.
 
-% Refine the paragraph below according to section on interrupts.
-
-Now, being in a controllable environment we can load our kernel into memory. This is where BIOS interrupts become useful.
-Since interrupts have not been explained yet, we can think of them as favors. More specifically when a BIOS interrupt is triggered 
-CPU halts the execution of anything else, as the name suggests, and serves the request of the BIOS interrupt. In this occasion by 
-calling \texttt{int 0x13} we ask the BIOS to load some data from our hard drive into our memory. However, before triggering 
-the interrupt we must pass some parameters through registers.
+Now, being in a controllable environment we can load our kernel into memory. BIOS interrupts will prove useful once again.
+In this occasion by calling \texttt{int 0x13} we ask the BIOS to load data from our hard drive into our memory. 
+However, before triggering the interrupt we must pass some parameters through CPU registers.
 
 \begin{table}[h]
     \centering
@@ -157,47 +277,6 @@ to choose the \texttt{Read Sectors From Drive} function.
 In the \texttt{al} register we can define the number of sectors (512-byte units) we want to read. For simplicity
 we will initially be reading just one.
 
-Before understanding what registers \texttt{ch}, \texttt{cl} and \texttt{dl} we need to introduce a new addressing
-model called \textbf{Cylinder-Head-Sector} (or CHS). As the name states, this model mirrors the concept of physical 
-cylinders, heads and sectors traditional hard drives use. 
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.4\textwidth]{images/chs_diagram.png}
-    \caption{CHS addressing layout: cylinders, heads, and sectors}
-    \label{fig:chs}
-\end{figure}
-
-As shown above, hard drives are constituted of platters which are essentially circular disks. On both surfaces
-of these platters - both top and bottom - data can be written magnetically by a device called head. So for 
-4 platters we have 8 heads. 
-
-Now imagine multiple cylinders with centers aligned with the platters'. The intersection of a platter's surface 
-and a cylinder is called a track. Naturally we have \(\textbf{Cylinders} \cdot \textbf{Platters} \cdot \textbf{2}\)
-number of tracks. Each track can be accessed by only one head.
-
-Each track is divided into sectors, which we can visualize as circular sectors. Each sector defines the smallest addressable
-unit upon a track which has a size of 512 bytes.
-
-When writting data to a hard drive we must specify the cylinder, the head and the sector along the track defined by the
-cylinder and the head's surface. Each combination of CHS maps to a 512-byte unit or more precisely a Logical Block 
-Address (LBA). First, we write data in cylinder 0, head 0, and sector 1 (sectors start counting from number 1). As we 
-fill up all sectors up to sector 63 we can start filling up heads. When head 255 is filled, we start filling up cylinders. The 
-last available cylinder is 1023. 
-
-\begin{itemize}
-    \item \textbf{1024}: Cylinders (0–1023, 10 bits)
-    \item \textbf{256}: Heads (0–255, 8 bits)
-    \item \textbf{63}: Sectors (1–63, 6 bits), \textit{1-based indexing}
-    \item \textbf{512}: Bytes per sector
-\end{itemize}
-
-Since CHS is limited at addressing 8.4 GiB of data it has been declared obsolete and replaced by direct LBA addressing.
-However, the BIOS still offers this function.
-
-Also, note that modern hard drives do not expose their geometrical structure and instead use an emulation layer for
-CHS addressing.
-
 For our case, since the first sector contains the bootloader, we want to start loading from sector number 2.
 So we can set our cylinder to 0, our head to 0 and our sector to 2. Be careful when addressing cylinders
 as their 2 high bits are defined in bits 6 and 7 of \texttt{cl}.
@@ -220,11 +299,26 @@ to store the data we read.
     mov es, bx
     xor bx, bx        ; Offset
     int 0x13
+    jc disk_error   ; Jump if carry flag is set (error occurred)
 \end{lstlisting}
 
 Finally, after having specified our parameters we can call \texttt{int 0x13} and let the BIOS do its job.
 
-% After relocating the CHS to its dedicated section, explain error handling
+Lastly, we need to ensure the read operation was conducted successfully. THis can be done by checking the carry flag.
+In case of an error the BIOS sets the carry flag. We can use the \texttt{jc} instruction to jump to an error
+handling routine if the carry flag is set. The label \texttt{disk\_error} is defined below.
+
+\begin{lstlisting}[caption={Assembly to handle disk read errors}]
+disk_error:
+    mov ah, 0x0E
+    mov al, 'E'
+    int 0x10
+    hlt
+\end{lstlisting}
+
+This routine uses the teletype output function of the video BIOS interrupt we introduced earlier
+to print the character 'E' to the screen, indicating an error has occurred. After printing the error message,
+the system halts using the \texttt{hlt} instructionl
 
 \section{Two-Stage Bootloaders}
 
@@ -232,10 +326,8 @@ TODO
 
 % Potential additions:
 % Segment registers reference table.
-% MBR 512-byte size and boot signature.
 % A20 line mention.
 % Disk read error handling.
-% Print message with INT 0x10.
 % Exercises: load multiple sectors, dump kernel bytes.
 % Protected Mode teaser.
 % Historical perspective.

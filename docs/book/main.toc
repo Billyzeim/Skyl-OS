@@ -8,7 +8,7 @@
 \contentsline {chapter}{\numberline {2}Bootloader}{5}{chapter.2}%
 \contentsline {section}{\numberline {2.1}Booting in Real Mode}{5}{section.2.1}%
 \contentsline {section}{\numberline {2.2}The Role Of The Bootloader}{6}{section.2.2}%
-\contentsline {section}{\numberline {2.3}Utilizing BIOS Interrupts}{6}{section.2.3}%
-\contentsline {section}{\numberline {2.4}LBA vs CHS Addressing}{6}{section.2.4}%
-\contentsline {section}{\numberline {2.5}Loading The Kernel}{6}{section.2.5}%
-\contentsline {section}{\numberline {2.6}Two-Stage Bootloaders}{9}{section.2.6}%
+\contentsline {section}{\numberline {2.3}Utilizing BIOS Interrupts}{7}{section.2.3}%
+\contentsline {section}{\numberline {2.4}LBA vs CHS Addressing}{8}{section.2.4}%
+\contentsline {section}{\numberline {2.5}Loading The Kernel}{9}{section.2.5}%
+\contentsline {section}{\numberline {2.6}Two-Stage Bootloaders}{11}{section.2.6}%

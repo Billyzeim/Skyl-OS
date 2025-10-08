@@ -70,7 +70,6 @@ disk_error:
     mov al, 'E'
     int 0x10
     hlt
-    jmp $
 
 ; --------------- Boot Signature ----------------
 times 510 - ($ - $$) db 0
