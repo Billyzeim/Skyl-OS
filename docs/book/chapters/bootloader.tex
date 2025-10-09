@@ -8,6 +8,8 @@ The majority of the following concepts, however, are transferable to other commo
 
 \section{Booting in Real Mode}
 
+Before we can understand the basics of a bootloader an introduction about the Real Mode of x86 processors is necessary.
+
 When the computer turns on the x86 processor automatically enters \textbf{Real Mode}, which poses some significant limitations.
 Newer processors still support Real Mode to ensure backward compatibility, although it is now considered obsolete.
 
@@ -139,6 +141,11 @@ Interrupts are usually defined as signals sent to the CPU to indicate that an ev
 When an interrupt is triggered the CPU stops what it is doing and executes a handler function to deal with the event.
 Interrups are devided into software and hardware interrupts. Software interrupts are triggered by software instructions, 
 while hardware are triggered by signals sent by hardware devices.
+
+A very important advantage of using interrupts is that they expose a controllabele interface to interact with critical
+hardware. This abstraction not only simplifies the development process and detatches the programming from the hardware
+specifics, but also allows for arguement checking before execution. Since security is a major concern is such low-level
+operations, this is a very important feature. This concept will be extended after user and kernel modes are introduced.
 
 In our case we will be using software interrupts to request services from the BIOS. Such services include reading from
 storage devices, printing to the screen and reading from the keyboard. For example the BIOS interrupt \texttt{0x10}
@@ -302,11 +309,11 @@ to store the data we read.
     jc disk_error   ; Jump if carry flag is set (error occurred)
 \end{lstlisting}
 
-Finally, after having specified our parameters we can call \texttt{int 0x13} and let the BIOS do its job.
+After having specified our parameters we can call \texttt{int 0x13} and let the BIOS do its job.
 
-Lastly, we need to ensure the read operation was conducted successfully. THis can be done by checking the carry flag.
-In case of an error the BIOS sets the carry flag. We can use the \texttt{jc} instruction to jump to an error
-handling routine if the carry flag is set. The label \texttt{disk\_error} is defined below.
+Now, we need to ensure the read operation was conducted successfully. Errors can be detected by checking 
+the carry flag. In case of an error the BIOS sets the carry flag. We can use the \texttt{jc} instruction 
+to jump to an error handling routine if the carry flag is set. The label \texttt{disk\_error} is defined below.
 
 \begin{lstlisting}[caption={Assembly to handle disk read errors}]
 disk_error:
@@ -318,7 +325,11 @@ disk_error:
 
 This routine uses the teletype output function of the video BIOS interrupt we introduced earlier
 to print the character 'E' to the screen, indicating an error has occurred. After printing the error message,
-the system halts using the \texttt{hlt} instructionl
+the system halts using the \texttt{hlt} instructionl.
+
+\section{Entering Protected Mode}
+
+TODO
 
 \section{Two-Stage Bootloaders}
 
