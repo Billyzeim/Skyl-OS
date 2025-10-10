@@ -1,9 +1,9 @@
 \chapter{Bootloader}
 
-In this chapter some fundamental concepts to the functioning of a bootloader will be explained and used in practice to load a
-placeholder kernel.
+In this chapter some fundamental concepts regarding the functioning of a bootloader will be explained and used in practice 
+to load a placeholder kernel.
 
-Before we start it should be made clear that everything below applies to 32-bit, x86 architecture processors.
+Before we start, it should be made clear that everything below applies to 32-bit, x86 architecture processors.
 The majority of the following concepts, however, are transferable to other common architectures.
 
 \section{Booting in Real Mode}
@@ -14,7 +14,7 @@ When the computer turns on the x86 processor automatically enters \textbf{Real M
 Newer processors still support Real Mode to ensure backward compatibility, although it is now considered obsolete.
 
 When in Real Mode the CPU is running by default in 16-bit mode, meaning we are expected to use 16-bit registers for our operations.
-While 32-bit registers are technically still available and can be utilized on newer machines their usage is advised against 
+While 32-bit registers are technically still available and can be utilized on newer machines, their usage is advised against 
 for most beginner applications. Switching to 32-bit Protected Mode is an exception to this, as we will see later.
 
 Another limitation of Real Mode is that we only have access to a specific size of memory. When referring to a memory 
@@ -30,28 +30,28 @@ by 0x1234 and 0x0005, 0x1230 and 0x0045, 0x1200 and 0x0345... and so on. This wa
 below 1MiB of memory.
 
 It should be made clear that the addresses used in Real Mode refer to physical addresses. This hinders us from protecting
-memory and defining its owenership because no process is prohibitted from accessing any memory segments.
+memory and defining its ownership because no process is prohibited from accessing any memory segments.
 This problem could be overcome by using a Global Descriptor Table in Protected Mode, however, for the purpose of this book we 
 will adopt virtual memory via paging as a more modern approach. Virtual memory, along with paging, will be discussed later in this 
 book but a brief explanation of how it helps with memory safety is given just to clarify why physical addressing is limiting.
 
 When using virtual addresses, our Operating System is responsible of mapping every virtual address to a physical one.
-By this mapping, the operating systems ensures that each program has its own range of physical addresses.
+By this mapping, the operating system ensures that each program has its own range of physical addresses.
 When two programs refer to the same virtual memory, very little does it matter, since they are translated into 
-totally different physical addresses by the operating system, rendering both unable to access eachothers' memory space.
+totally different physical addresses by the operating system, rendering both unable to access eachother's memory space.
 
 Having said that, Real Mode is simply inadequate for modern systems. This is why engineers came up with another CPU 
 Operation Mode called \textbf{Protected Mode}. In this mode, while there is no virtualization by default, we can 
 take advantage of how memory is segmented to protect critical data from the user. This is achieved by defining different 
-memory segments with different privileges (ring levels). The CPU decides if a piece of code has the privilages 
-it tries to claim. This is determined by the segment through which we are accessing that memory (we will se that in
+memory segments with different privileges (ring levels). The CPU decides if a piece of code has the privileges 
+it tries to claim. This is determined by the segment through which we are accessing that memory (we will see that in
 practice). Memory management and CPU Operating Modes will have chapters of their own later in this book.
 
 \section{The Role Of The Bootloader}
 
 When the computer turns on the first program to take control is the BIOS. Among other things that do not concern us in 
 this section, the BIOS transfers control to the bootloader which is then responsible for loading the OS. Modern systems 
-use UEFI insted to overcome some limitations of the BIOS but for educational purposes we will focus on BIOS.
+use UEFI instead to overcome some limitations of the BIOS but for educational purposes we will focus on BIOS.
 
 First, the BIOS scans the data storage devices. More precisely it checks the first 512 bytes of each one, namely the Master Boot Record 
 (MBR), which is the memory a bootloader conventionally resides upon. If the last two bytes of the MBR are the word 0xAA55 the BIOS 
@@ -67,7 +67,7 @@ Once the bootable is determined control is transfered to the Stage-1 bootloader,
 In advanced operating systems the Stage-1 bootloader reads the partition table, located in the next 64 bytes of the MBR.
 This table contains four entries of 16 bytes each. Each entry describes a partition in the storage device. When the Stage-1
 bootloader finds the active (bootable) partition it loads the volume boot sector of that partition (VBR) into memory and transfers
-control to it. The VBR contains infromation about the file system of that partition and the next stage of bootloading, which can differ
+control to it. The VBR contains information about the file system of that partition and the next stage of bootloading, which can differ
 between operating systems. However, for simplicity, in this chapter we will assume that the Stage-1 bootloader loads the kernel directly 
 from the MBR.
 
@@ -96,12 +96,12 @@ Below is a table describing the layout of the MBR.
     \caption{Master Boot Record (512 bytes) layout.}
 \end{table}
     
-For the bootloader to run the BIOS loads the it from the MBR to the memory address 0x7C00. This address has been
+For the bootloader to run the BIOS loads it from the MBR to the memory address 0x7C00. This address has been
 traditionally used by BIOS software to load the bootloader. Bootloader developers assume this is where their 
 bootloader will be loaded to ensure compatibility. The address 0x7C00 is ideal since it is way below the 1MiB 
 accessible range and still leaves space below it for the interrupt vectors (they will be covered soon).
 
-After control has been transfered to the bootloader it is now its job to load the kernel. In a later section 
+After control has been transferred to the bootloader it is now its job to load the kernel. In a later section 
 we will suggest some techniques to overcome the 512-byte barrier and the limitations of the Real Mode. 
 
 To complete the picture, below is a table describing the layout of a partition table entry.
@@ -145,12 +145,12 @@ interrupts that we can use to perform basic I/O operations.
 
 Interrupts are usually defined as signals sent to the CPU to indicate that an event needs immediate attention.
 When an interrupt is triggered the CPU stops what it is doing and executes a handler function to deal with the event.
-Interrups are devided into software and hardware interrupts. Software interrupts are triggered by software instructions, 
+Interrups are divided into software and hardware interrupts. Software interrupts are triggered by software instructions, 
 while hardware are triggered by signals sent by hardware devices.
 
-A very important advantage of using interrupts is that they expose a controllabele interface to interact with critical
-hardware. This abstraction not only simplifies the development process and detatches the programming from the hardware
-specifics, but also allows for arguement checking before execution. Since security is a major concern is such low-level
+A very important advantage of using interrupts is that they expose a controllable interface to interact with critical
+hardware. This abstraction not only simplifies the development process and detaches the programming from the hardware
+specifics, but also allows for argument checking before execution. Since security is a major concern in such low-level
 operations, this is a very important feature. This concept will be extended after user and kernel modes are introduced.
 
 In our case we will be using software interrupts to request services from the BIOS. Such services include reading from
@@ -197,9 +197,9 @@ number of tracks. Each track can be accessed by only one head.
 Each track is divided into sectors, which we can visualize as circular sectors. Each sector defines the smallest addressable
 unit upon a track which has a size of 512 bytes.
 
-When writting data to a hard drive we must specify the cylinder, the head and the sector along the track defined by the
+When writing data to a hard drive we must specify the cylinder, the head and the sector along the track defined by the
 cylinder and the head's surface. Each combination of CHS maps to a 512-byte unit or more precisely a Logical Block 
-Address (LBA). First, we write data in cylinder 0, head 0, and sector 1 (sectors start counting from number 1). As we 
+Address (LBA). First, we write data in cylinder 0, head 0, and sector 1 (sector numbering starts at 1). As we 
 fill up all sectors up to sector 63 we can start filling up heads. When head 255 is filled, we start filling up cylinders. The 
 last available cylinder is 1023. 
 
@@ -252,20 +252,20 @@ requests for the CPU to stop what it is doing and execute some other instruction
 Since interrupt handling has not been set up yet, they will just cause problems.
 
 In lines 6 to 8 we are setting up a simple stack for our Real Mode. To understand these lines we must
-remember how physical memory is addressed in Real Mode. It our Stack Segment pointer (ss) we choose segment \texttt{0x0700}
+remember how physical memory is addressed in Real Mode. In our Stack Segment pointer (ss) we choose segment \texttt{0x0700}
 and in our Stack Pointer (sp) we define the offset \texttt{0x0000}. Now the physical address is calculated as such:
 \[
 \textbf{PA = 0x0700} \cdot \textbf{16 + 0x0000}
 \textbf{ => PA = 0x7000 + 0x0000}
 \textbf{    => PA = 0X7000}
 \]
-This address is chosen to be more than 512 bytes below \texttt{0x7C00}, the range where out bootloader is placed.
+This address is chosen to be more than 512 bytes below \texttt{0x7C00}, the range where our bootloader is placed.
 As mentioned, there are other combinations that could address the same memory as well.
 Note that the bootloader might still run without lines 6 to 11, however, without having the stack set up
 and the ax, ds and es registers zeroed-out the environment would be highly unpredictable.
 
 Now, being in a controllable environment we can load our kernel into memory. BIOS interrupts will prove useful once again.
-In this occasion by calling \texttt{int 0x13} we ask the BIOS to load data from our hard drive into our memory. 
+On this occasion by calling \texttt{int 0x13} we ask the BIOS to load data from our hard drive into our memory. 
 However, before triggering the interrupt we must pass some parameters through CPU registers.
 
 \begin{table}[h]
@@ -285,7 +285,7 @@ However, before triggering the interrupt we must pass some parameters through CP
     \label{tab:disk_read_params}
 \end{table}
     
-Since interrupt \texttt{0x13} provides multiple storage device related function we can use the \texttt{ah} register
+Since interrupt \texttt{0x13} provides multiple storage device related functions we can use the \texttt{ah} register
 to choose the \texttt{Read Sectors From Drive} function.
 In the \texttt{al} register we can define the number of sectors (512-byte units) we want to read. For simplicity
 we will initially be reading just one.
@@ -317,7 +317,7 @@ to store the data we read.
 
 After having specified our parameters we can call \texttt{int 0x13} and let the BIOS do its job.
 
-Now, we need to ensure the read operation was conducted successfully. Errors can be detected by checking 
+Now, we need to ensure the read operation was performed successfully. Errors can be detected by checking 
 the carry flag. In case of an error the BIOS sets the carry flag. We can use the \texttt{jc} instruction 
 to jump to an error handling routine if the carry flag is set. The label \texttt{disk\_error} is defined below.
 
@@ -331,21 +331,21 @@ disk_error:
 
 This routine uses the teletype output function of the video BIOS interrupt we introduced earlier
 to print the character 'E' to the screen, indicating an error has occurred. After printing the error message,
-the system halts using the \texttt{hlt} instructionl.
+the system halts using the \texttt{hlt} instruction.
 
 \section{Entering Protected Mode}
 
 A pattern might have started emerging since this is an introductory chapter, but some concepts below are just referred
-to and not exllained. Every one of those will be thoroughly explained in next chapters.
+to and not explained. Every one of those will be thoroughly explained in next chapters.
 
-Before jumping to our kernel code we will swtich our CPU operating mode from Real Mode to \textbf{Protected Mode}.
+Before jumping to our kernel code we will switch our CPU operating mode from Real Mode to \textbf{Protected Mode}.
 Technically, this is not a requirement, however, modern C compilers output 32-bit binaries. To prepare the ground
-for our C kernel code properly we will enter Protected Mode before jumping. By doing we enable accessing 4GiB of 
+for our C kernel code properly we will enter Protected Mode before jumping. By doing so, we enable accessing 4GiB of 
 memory as well.
 
 To enter Protected Mode x86 processors require us to have described a memory layout. We can achieve this by defining
-a Global Descriptor Table (GDT). Segment selectors can use this table to find their corresponding memory. Since our
-approach will use paging for memory management we will set up a very simple GDT in which the code and data segments
+a Global Descriptor Table (GDT). Segment selectors can use this table to find their corresponding memory segments. Since 
+our approach will use paging for memory management we will set up a very simple GDT in which the code and data segments
 overlap just to satisfy the CPU requirement.
 
 \begin{lstlisting}[caption={Defining a GDT}]
@@ -374,8 +374,8 @@ location of the GDT.
 \end{lstlisting}
 
 In the snippet above we load the descriptor of the GDT into the CPU and enable the Protected Mode option.
-Immediately after, we jump to the \texttt{protected\_mode\_start} label which includes 32 bit mode. We can ignore how and why
-we use a far jump and what a far jump is.
+Immediately after, we jump to the \texttt{protected\_mode\_start} label which includes 32-bit mode. We can ignore how and why
+we use a far jump for now.
 
 Finally, we can tell the assembly compiler we are in 32-bit mode using the \texttt{[BITS 32]} directive and jump
 to our kernel. The location of the kernel has been defined when we loaded it from the disk using the int 0x13 instruction.
