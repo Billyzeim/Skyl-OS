@@ -12,4 +12,5 @@
 \contentsline {section}{\numberline {2.4}LBA vs CHS Addressing}{8}{section.2.4}%
 \contentsline {section}{\numberline {2.5}Loading The Kernel}{9}{section.2.5}%
 \contentsline {section}{\numberline {2.6}Entering Protected Mode}{11}{section.2.6}%
-\contentsline {section}{\numberline {2.7}Two-Stage Bootloaders}{11}{section.2.7}%
+\contentsline {section}{\numberline {2.7}Build and Run}{12}{section.2.7}%
+\contentsline {section}{\numberline {2.8}Two-Stage Bootloaders}{12}{section.2.8}%

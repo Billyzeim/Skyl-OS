@@ -55,7 +55,13 @@ use UEFI insted to overcome some limitations of the BIOS but for educational pur
 
 First, the BIOS scans the data storage devices. More precisely it checks the first 512 bytes of each one, namely the Master Boot Record 
 (MBR), which is the memory a bootloader conventionally resides upon. If the last two bytes of the MBR are the word 0xAA55 the BIOS 
-identifies the storage device as a bootable device.
+identifies the storage device as a bootable device. The code below demonstrates we can sign the MBR by padding all bytes until byte 510
+with zeros and then writing the word 0xAA55 to the last two bytes.
+
+\begin{lstlisting}[caption={MBR Signature}]
+    times 510 - ($ - $$) db 0
+    dw 0xAA55
+\end{lstlisting}
 
 Once the bootable is determined control is transfered to the Stage-1 bootloader, located in the first 446 bytes of the MBR.
 In advanced operating systems the Stage-1 bootloader reads the partition table, located in the next 64 bytes of the MBR.
@@ -329,7 +335,73 @@ the system halts using the \texttt{hlt} instructionl.
 
 \section{Entering Protected Mode}
 
+A pattern might have started emerging since this is an introductory chapter, but some concepts below are just referred
+to and not exllained. Every one of those will be thoroughly explained in next chapters.
+
+Before jumping to our kernel code we will swtich our CPU operating mode from Real Mode to \textbf{Protected Mode}.
+Technically, this is not a requirement, however, modern C compilers output 32-bit binaries. To prepare the ground
+for our C kernel code properly we will enter Protected Mode before jumping. By doing we enable accessing 4GiB of 
+memory as well.
+
+To enter Protected Mode x86 processors require us to have described a memory layout. We can achieve this by defining
+a Global Descriptor Table (GDT). Segment selectors can use this table to find their corresponding memory. Since our
+approach will use paging for memory management we will set up a very simple GDT in which the code and data segments
+overlap just to satisfy the CPU requirement.
+
+\begin{lstlisting}[caption={Defining a GDT}]
+gdt_start:
+    dq 0x0000000000000000     ; null descriptor
+    dq 0x00CF9A000000FFFF     ; code segment
+    dq 0x00CF92000000FFFF     ; data segment
+gdt_end:
+
+gdt_desc:
+    dw gdt_end - gdt_start - 1   ; size = total bytes - 1
+    dd gdt_start                 ; address of the GDT
+\end{lstlisting}
+
+To pass this table to the CPU we use a descriptor, a pointer to a piece of memory in which we write the size and the 
+location of the GDT.
+
+\begin{lstlisting}[caption={Loading GDT and Enabling Protected Mode}]
+    lgdt [gdt_desc]
+    
+    mov eax, cr0
+    or eax, 1
+    mov cr0, eax
+
+    jmp 0x08:protected_mode_start
+\end{lstlisting}
+
+In the snippet above we load the descriptor of the GDT into the CPU and enable the Protected Mode option.
+Immediately after, we jump to the \texttt{protected\_mode\_start} label which includes 32 bit mode. We can ignore how and why
+we use a far jump and what a far jump is.
+
+Finally, we can tell the assembly compiler we are in 32-bit mode using the \texttt{[BITS 32]} directive and jump
+to our kernel. The location of the kernel has been defined when we loaded it from the disk using the int 0x13 instruction.
+
+\begin{lstlisting}[caption={Initializing Registers and Jumping to Kernel}]
+[BITS 32]
+protected_mode_start:
+    ; Set up segment selectors
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+
+    ; Jump to kernel entry point
+    jmp 0x08:0x10000
+\end{lstlisting}
+
+\section{Build and Run}
+
 TODO
+
+% Compile with nasm
+% Create a bootable file
+% Run with qemu x86
 
 \section{Two-Stage Bootloaders}
 
@@ -337,8 +409,4 @@ TODO
 
 % Potential additions:
 % Segment registers reference table.
-% A20 line mention.
-% Disk read error handling.
 % Exercises: load multiple sectors, dump kernel bytes.
-% Protected Mode teaser.
-% Historical perspective.
