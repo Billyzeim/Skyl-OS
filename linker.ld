@@ -1,47 +1,82 @@
-KERNEL_VMA = 0xC0000000;   /* The virtual base for the higher-half section */
+ENTRY(kernel_low)                 /* <-- use your real low entry symbol */
 
-ENTRY(kernel_low)
+KERNEL_LMA = 0x0010000;           /* where BIOS loader puts the file */
+KERNEL_VMA = 0xC0000000;          /* higher-half virtual base */
 
 SECTIONS
 {
-	. = 0x10000;
+  /* ---------- Low identity trampoline (phys=virt) ---------- */
+  . = KERNEL_LMA;
+  __tramp_start = .;
+  .tramp : AT(ADDR(.tramp))
+  {
+    KEEP(*(.tramp.entry))         /* low entry goes here */
+    *(.tramp .tramp.*)
+    *(.text.tramp .text.tramp.*)
+    *(.rodata.tramp .rodata.tramp.*)
+    *(.data.tramp .data.tramp.*)
+    *(.bss.tramp .bss.tramp.*)
+  }
+  __tramp_end = .;
 
-	.text : ALIGN(4K)
-	{
-        *(.text.start)
-		*(.text)
-	}
+  /* Next free PHYSICAL address for the high kernel payload */
+  . = ALIGN(0x1000);
+  __kernel_lma_start = .;
 
-	.rodata : ALIGN(4K)
-	{
-		*(.rodata*)
-	}
+  /* ---------- Switch to high virtual address ---------- */
+  . = KERNEL_VMA;
+  __kernel_vma_start = .;
 
-	.data : ALIGN(4K)
-	{
-		*(.data)
-	}
+  /* text: VMA high, LMA chained after .tramp */
+  __text_lma = __kernel_lma_start;
+  .text : AT(__text_lma)
+  {
+    KEEP(*(.text.start))          /* tiny 32-bit stub (if you have one) */
+    *(.text .text.*)
+  }
 
-	.bss : ALIGN(4K)
-	{
-		*(.bss*)
-	}
+  /* rodata: LMA after text's actual load */
+  . = ALIGN(0x1000);
+  __rodata_lma = LOADADDR(.text) + SIZEOF(.text);
+  .rodata : AT(__rodata_lma)
+  {
+    *(.rodata .rodata.*)
+  }
 
-	.stack : ALIGN(4K)
-	{
-		__stack_bottom = .;
-		. = . + 0x80000; /* 32 KiB should be fine for now, will manage in C later */
-		__stack_top = .;
-	}
+  /* data: LMA after rodata's actual load */
+  . = ALIGN(0x1000);
+  __data_lma = LOADADDR(.rodata) + SIZEOF(.rodata);
+  .data : AT(__data_lma)
+  {
+    *(.data .data.*)
+  }
 
-	PROVIDE(__hh_phys = __hh_lma + (hh_kernel - KERNEL_VMA));
-	
-	/* --- Higher-half kernel entry --- */
-	__hh_lma = ALIGN(LOADADDR(.data) + SIZEOF(.data), 0x1000);
+  /* bss: NOLOAD (still compute end for convenience) */
+  . = ALIGN(0x1000);
+  __bss_lma = LOADADDR(.data) + SIZEOF(.data);
+  .bss (NOLOAD) :
+  {
+    __bss_start = .;
+    *(.bss .bss.* COMMON)
+    __bss_end = .;
+  }
 
-	.text.hh KERNEL_VMA : AT(__hh_lma)
-	{
-		KEEP(*(.text.hh))             /* put hh_kernel here */
-		PROVIDE(__hh_kernel = hh_kernel); /* export its virtual address */
-	}
+  . = ALIGN(0x1000);
+  __kernel_vma_end = .;
+  __kernel_lma_end = __bss_lma + SIZEOF(.bss);
+
+  /* Optional: if you insist on linker-made stack, make it NOLOAD */
+  . = ALIGN(0x1000);
+  .stack (NOLOAD) :
+  {
+    __stack_bottom = .;
+    . = . + 0x8000;               /* 32 KiB */
+    __stack_top = .;
+  }
+
+  /* Drop unwind noise to avoid surprises */
+  /DISCARD/ : {
+    *(.eh_frame) *(.eh_frame_hdr) *(.gcc_except_table*)
+    *(.gnu.extab*) *(.gnu.linkonce.eh_frame*)
+  }
 }

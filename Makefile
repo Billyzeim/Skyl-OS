@@ -4,7 +4,7 @@ LD := ld
 AS := nasm
 
 # Flags
-CFLAGS := -m32 -ffreestanding -nostdlib -fno-pie -I include
+CFLAGS := -m32 -ffreestanding -nostdlib -fno-pie -I include -fno-asynchronous-unwind-tables -fno-unwind-tables -fno-stack-protector
 ASFLAGS_KERNEL := -f elf32
 ASFLAGS_BOOT := -f bin
 LDFLAGS := -m elf_i386 -T linker.ld --oformat binary

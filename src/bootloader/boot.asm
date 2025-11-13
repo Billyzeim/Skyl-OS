@@ -12,7 +12,7 @@ start:
 
     ; Load x sectors from disk to 0x10000
     mov ah, 0x02
-    mov al, 41        ; Number of sectors x
+    mov al, 3        ; Number of sectors x
     mov ch, 0
     mov cl, 2
     mov dh, 0
@@ -55,7 +55,7 @@ protected_mode_start:
     mov fs, ax
     mov gs, ax
     mov ss, ax
-
+    mov esp, 0x0090000       
     ; Jump to kernel entry point
     jmp 0x08:0x10000
 
