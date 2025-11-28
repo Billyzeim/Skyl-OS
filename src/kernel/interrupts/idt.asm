@@ -1,42 +1,55 @@
-; idt.asm - IDT initialization with ISRs for IRQs 0–15, ISR 0 (div zero), and ISR 14 (page fault)
-; Compile with: nasm -f elf32 idt.asm -o idt.o
 
 section .text
-global idt_init
+global idt_load
 global init_pic
 
-; Declare IRQ ISRs 0–15
+; ---------------------------------------------
+; Import C Handlers (The logic you requested)
+; ---------------------------------------------
+; This imports isr_0, isr_1, ... isr_15
 %assign i 0
 %rep 16
-    extern isr_ %+ i
-    global isr_ %+ i %+ _asm
+    extern isr_%+i
 %assign i i+1
 %endrep
 
-; Declare ISR 0 (division by zero) and ISR 14 (page fault)
-extern isr_32
-global isr_32_asm
-extern isr_14
-global isr_14_asm
+extern isr_32              ; Division by Zero C handler
+extern isr_14              ; Page Fault C handler (Note: also used by IRQ 14 loop above)
+extern isr_3               ; Debug Breakpoint C handler
 
-; ------------------------
-; Initialize the PIC (8259A)
-; ------------------------
+; ---------------------------------------------
+; Export Assembly Stubs
+; ---------------------------------------------
+; We export these so the C code can get their addresses
+global isr_32_asm          ; Div Zero wrapper
+global isr_14_asm          ; Page Fault wrapper
+global isr_3_asm           ; Debug Breakpoint wrapper
+
+%assign i 0
+%rep 16
+    global irq_stub_%+i    ; IRQ wrappers (renamed to avoid isr_14_asm collision)
+%assign i i+1
+%endrep
+
+; ---------------------------------------------
+; Function: init_pic
+; Description: Remaps PIC to 0x20-0x2F. Callable from C.
+; ---------------------------------------------
 init_pic:
     ; Master PIC
     mov al, 0x11
     out 0x20, al
-    mov al, 0x20    ; IRQ0-7 → INT 0x20–0x27
+    mov al, 0x20    ; IRQ0-7 -> INT 0x20-0x27
     out 0x21, al
-    mov al, 0x04    ; Slave at IRQ2
+    mov al, 0x04
     out 0x21, al
-    mov al, 0x01    ; 8086/88 mode
+    mov al, 0x01
     out 0x21, al
 
     ; Slave PIC
     mov al, 0x11
     out 0xA0, al
-    mov al, 0x28    ; IRQ8-15 → INT 0x28–0x2F
+    mov al, 0x28    ; IRQ8-15 -> INT 0x28-0x2F
     out 0xA1, al
     mov al, 0x02
     out 0xA1, al
@@ -50,81 +63,40 @@ init_pic:
     out 0xA1, al
     ret
 
-; ------------------------
-; Initialize IDT
-; ------------------------
-idt_init:
-    cli
-    call init_pic
-    call init_idt
-    lidt [idt_ptr]
+; ---------------------------------------------
+; Function: idt_load
+; Prototype: void idt_load(uint32_t *idt_ptr);
+; Description: Loads the IDT pointer.
+; ---------------------------------------------
+idt_load:
+    mov eax, [esp + 4]  ; Get pointer argument from stack
+    lidt [eax]          ; Load IDT
     ret
 
-init_idt:
-    ; Clear IDT
-    mov ecx, 256
-    mov edi, idt
-    xor eax, eax
-    rep stosd
-
-    ; IRQs (INT 0x20–0x2F)
-    %assign i 0
-    %rep 16
-        mov eax, isr_ %+ i %+ _asm
-        mov ebx, (0x20 + i) * 8
-        mov word [idt + ebx], ax
-        mov word [idt + ebx + 2], 0x08
-        mov word [idt + ebx + 4], 0x8E00
-        shr eax, 16
-        mov word [idt + ebx + 6], ax
-    %assign i i+1
-    %endrep
-
-    ; ISR 0: Division by Zero (INT 0x00)
-    mov eax, isr_32_asm
-    mov ebx, 0x00 * 8
-    mov word [idt + ebx], ax
-    mov word [idt + ebx + 2], 0x08
-    mov word [idt + ebx + 4], 0x8E00
-    shr eax, 16
-    mov word [idt + ebx + 6], ax
-
-    ; ISR 14: Page Fault (INT 0x0E)
-    mov eax, isr_14_asm
-    mov ebx, 0x0E * 8
-    mov word [idt + ebx], ax
-    mov word [idt + ebx + 2], 0x08
-    mov word [idt + ebx + 4], 0x8E00
-    shr eax, 16
-    mov word [idt + ebx + 6], ax
-
-    ret
-
-; ------------------------
-; ISR stubs for IRQs
-; ------------------------
+; ---------------------------------------------
+; IRQ Stubs (Mapped to INT 0x20 - 0x2F)
+; ---------------------------------------------
 %assign i 0
 %rep 16
-    %if i != 14
-        isr_ %+ i %+ _asm:
-            cli
-            pushad
-            call isr_ %+ i
-            mov al, 0x20
-        %if i >= 8
-            out 0xA0, al
-        %endif
-            out 0x20, al
-            popad
-            iret
+    irq_stub_%+i:
+        cli
+        pushad
+        call isr_%+i      ; Calls C function isr_0, isr_1, etc.
+        
+        mov al, 0x20      ; Send EOI to Master
+    %if i >= 8
+        out 0xA0, al      ; Send EOI to Slave if needed
     %endif
+        out 0x20, al
+        
+        popad
+        iret
 %assign i i+1
 %endrep
 
-
-; ------------------------
-; ISR stub for Division by Zero (INT 0x00)
-; ------------------------
+; ---------------------------------------------
+; Exception Stub: Division by Zero (INT 0x00)
+; ---------------------------------------------
 isr_32_asm:
     cli
     pushad
@@ -132,34 +104,25 @@ isr_32_asm:
     popad
     iret
 
-; ------------------------
-; ISR stub for Page Fault (INT 0x0E)
-; ------------------------
+; ---------------------------------------------
+; Exception Stub: Page Fault (INT 0x0E)
+; ---------------------------------------------
 isr_14_asm:
     cli
     pushad
-
-    ; The CPU pushes error code after pushing EIP, CS, EFLAGS
-    ; So error code is on stack at [esp + 32] after pushad (8 registers * 4 bytes)
-
-    mov eax, [esp + 32]   ; get error code
-    push eax             ; push error code as argument
-    call isr_14
-    add esp, 4           ; clean up stack
-
+    mov eax, [esp + 32]   ; Get error code pushed by CPU
+    push eax              ; Push error code as argument to C
+    call isr_14           ; Call C handler
+    add esp, 4            ; Clean up argument
     popad
-    ; Halt or loop - do NOT iret
-    jmp $
+    jmp $                 ; Infinite loop (Page faults are usually fatal here)
 
-
-; ------------------------
-; IDT storage
-; ------------------------
-section .data
-align 8
-idt:
-    times 256 * 8 db 0
-
-idt_ptr:
-    dw 256 * 8 - 1
-    dd idt
+isr_3_asm:
+    cli
+    pushad          ; Pushes EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
+    mov eax, esp    
+    push eax        ; Push pointer as argument
+    call isr_3      ; Call C handler
+    add esp, 4      ; Pop the argument
+    popad           ; Restore registers
+    iret            ; Resume execution
