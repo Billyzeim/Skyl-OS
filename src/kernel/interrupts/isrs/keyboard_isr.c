@@ -91,8 +91,6 @@ void isr_1() {
     if (!(scancode & 0x80)) { // key press only
         char c = scancode_to_ascii(scancode);
         if (c) keybuf_push(c);
+        printf("Key pressed: %c (scancode: 0x%x)\n", c ? c : '?', scancode);
     }
-
-    // Send EOI to PIC
-    outb(0x20, 0x20);
 }
