@@ -10,9 +10,9 @@ extern void init_pic();
 
 // 3. Import Exception Handlers (ASM wrappers)
 // find the correct names for these handlers in the isrs folder
-extern void ___(); // Div Zero
-extern void ___(); // Page Fault
-extern void ___();  // Debug Breakpoint
+extern void __________(); // Div Zero
+extern void __________(); // Page Fault
+extern void __________();  // Debug Breakpoint
 
 // 4. Import IRQ Handlers (ASM wrappers)
 // IMPORTANT: These match the 'irq_stub_X' names in idt.asm
@@ -44,20 +44,19 @@ void idt_init() {
 
     // C. Set Exception Gates
     // INT 0: Division by Zero
-    // gate_set(0, (uint32_t)isr_32_asm, 0x08, 0x8E);
-    helper(0, (uint32_t) ___, 0x08, 0x8E); // div by zero 
+    helper(0, (uint32_t) __________, 0x08, 0x8E); // div by zero 
     
     // INT 14: Page Fault
-    helper(14, (uint32_t) ___, 0x08, 0x8E); // page fault
+    helper(14, (uint32_t) __________, 0x08, 0x8E); // page fault
 
-    // Gate 3 is reserved for Debugging/Breakpoints
-    helper(3, (uint32_t) ___, 0x08, 0x8E); // poor mans debugger
+    helper(3, (uint32_t) __________, 0x08, 0x8E); // poor mans debugger
 
     // D. Set IRQ Gates (Mapped to 0x20 - 0x2F)
     // We use the irq_stub_X addresses here
-    helper(0x20, (uint32_t)irq_stub_0, 0x08, 0x8E);
-    helper(___, (uint32_t)irq_stub_1, 0x08, 0x8E); // add the correct interrupt vector number for the keyboard interrupts
+    helper(0x20, (uint32_t)irq_stub_0, 0x08, 0x8E); // Timer IRQ
+    helper(_____, (uint32_t)irq_stub_1, 0x08, 0x8E); // add the correct interrupt vector number for the keyboard interrupts
 
     // E. Load the IDT
     idt_load((uint32_t)&idt_ptr);
+    return;
 }

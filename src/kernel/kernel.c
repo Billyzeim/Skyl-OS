@@ -2,6 +2,39 @@
 #include <paging.h>
 #include <allocators.h>
 
+#define PIC1_DATA_PORT 0x21
+
+#define PRINT_EAX() ({ \
+    uint32_t _val; \
+    __asm__ __volatile__("mov %%eax, %0" : "=r"(_val)); \
+    printf("Current EAX: 0x%x\n", _val); \
+})
+
+void mask_timer() {
+    // 1. Read the current mask
+    uint8_t cur_mask = inb(PIC1_DATA_PORT);
+    
+    // 2. Set the 0th bit (IRQ 0 - Timer) to 1
+    // 0x01 is binary 00000001
+    cur_mask = cur_mask | 0x01; 
+    
+    // 3. Write the new mask back
+    outb(PIC1_DATA_PORT, cur_mask);
+}
+
+void unmask_timer() {
+    uint8_t cur_mask = inb(PIC1_DATA_PORT);
+    
+    // Clear the 0th bit to 0 using AND and NOT
+    cur_mask = cur_mask & ~(0x01);
+    
+    outb(PIC1_DATA_PORT, cur_mask);
+}
+
+void syscall_echo(char c) {
+    __asm__ volatile("int $0x80" : : "a"(c));
+}
+
 // Import the IDT initialization function
 extern void idt_init(); 
 
@@ -32,6 +65,7 @@ void kernel_low() {
     // If your timer_isr prints to the screen, you should see output now.
     kprint("[LOW KERNEL] Enabling interrupts (STI)...\n");
     __asm__ volatile("sti");
+    // mask_timer();   // Disable timer IRQ for cleaner output
 
     // =======================================================================
     // INTERRUPT TESTS
@@ -54,10 +88,12 @@ void kernel_low() {
     */
 
     // --- TEST 3: Software Interrupt (Manual) ---
-
-    // kprint("[TEST] Triggering Manual Interrupt 0x80...\n");
     // __asm__ volatile("int $0x03"); 
 
+    PRINT_EAX();
+    
+    // syscall_echo('k');
+    
     kprint("[LOW KERNEL] System active. Press keys to test Keyboard (IRQ 1).\n");
 
     // Jump to Higher Half Kernel (Optional, or stay here for testing)

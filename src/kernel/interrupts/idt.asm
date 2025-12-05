@@ -118,11 +118,21 @@ isr_14_asm:
     jmp $                 ; Infinite loop (Page faults are usually fatal here)
 
 isr_3_asm:
-    cli
-    pushad          ; Pushes EAX, ECX, EDX, EBX, ESP, EBP, ESI, EDI
-    mov eax, esp    
-    push eax        ; Push pointer as argument
-    call isr_3      ; Call C handler
-    add esp, 4      ; Pop the argument
-    popad           ; Restore registers
-    iret            ; Resume execution
+    pushad
+    push esp     ; This passes a POINTER to the regs structure 
+    call isr_3   ; calls void isr_3(registers_t *regs)
+    add esp, 4   ; Clean up the stack (remove the pointer we pushed)
+    popad        ; Now loads the MODIFIED values from stack
+    iret
+
+extern syscall_echo_isr
+
+global syscall_echo_stub
+
+syscall_echo_stub:
+    pushad
+    push esp
+    call syscall_echo_isr
+    add esp, 4
+    popad
+    iret

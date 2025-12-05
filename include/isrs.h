@@ -18,5 +18,6 @@ void isr_14();
 void isr_15();
 void isr_21();
 void isr_32();
+void syscall_echo_isr();
 
 #endif

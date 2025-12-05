@@ -86,11 +86,10 @@ void keyboard_echo_loop() {
 }
 
 void isr_1() {
-    uint8_t scancode = inb(0x60);
-
-    if (!(scancode & 0x80)) { // key press only
-        char c = scancode_to_ascii(scancode);
-        if (c) keybuf_push(c);
-        printf("Key pressed: %c (scancode: 0x%x)\n", c ? c : '?', scancode);
-    }
+    uint8_t scancode = __________;
+    // Use the inb function . The keyboard input is at 0x60
+    // check if key was pressed using !( scancode & 0x80)
+    // and ignore key releases
+    // convert scancode to ascii using scancode_to_ascii function
+    // print it with printf
 }
