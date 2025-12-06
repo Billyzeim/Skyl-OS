@@ -44,6 +44,10 @@ void kernel_main(void) {
     kprint("The rest of the kernel (paging, allocators, etc.) is still in low memory.\n");
     kprint("You can now implement higher-half versions of paging and allocators...\n");
 
+    char c;
+    scanf("%c", (char*)&c); // Wait for input before proceeding
+    printf("You entered: %c\n", c);
+
     // Uncomment to test page fault handling
     // printf("Deliberately causing a page fault by accessing unmapped memory...\n");
     // unmap_page(first_page_table, 0);
