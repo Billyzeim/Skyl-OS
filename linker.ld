@@ -1,6 +1,6 @@
 KERNEL_VMA = 0xC0000000;   /* The virtual base for the higher-half section */
 
-ENTRY(kernel_low)
+/* ENTRY(kernel_low_asm) */
 
 SECTIONS
 {
