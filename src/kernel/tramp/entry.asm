@@ -1,21 +1,51 @@
+; src/kernel/entry.asm
 [BITS 32]
-global kernel_low_asm
+
+global entry
 global debug
 extern tramp
-section .tramp.entry
+global enable_paging
 
-kernel_low_asm:
+section .tramp.bss
+align 16
+tramp_stack_bottom:
+    resb 4096
+tramp_stack_top:
+
+section .tramp.entry
+entry:
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    mov esp, tramp_stack_top
     call tramp
+
+.hang:
+    hlt
+    jmp .hang
 
 debug:
     mov edi, 0xB8000
     mov ecx, 80*25
-    mov ax, 0x0720          ; ' ' (space) with attr 0x07
+    mov ax, 0x0720
     rep stosw
-
-    ; write 'K' at top-left
-    mov word [0xB8000], 0x074B   ; 'K' (0x4B) + attr 0x07
+    mov word [0xB8000], 0x0E4B ; Yellow 'K'
     ret
 
-.hang: hlt
-      jmp .hang
+enable_paging:
+    mov cr3, eax
+
+    mov ecx, cr4
+    or ecx, 0x00000010
+    mov cr4, ecx
+
+    mov ecx, cr0
+    or ecx, 0x80000000
+    mov cr0, ecx
+
+    ret
+
+section .note.GNU-stack noalloc noexec nowrite progbits
+
+

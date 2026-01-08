@@ -1,47 +1,55 @@
-KERNEL_VMA = 0xC0000000;   /* The virtual base for the higher-half section */
+ENTRY(entry)
 
-/* ENTRY(kernel_low_asm) */
+KERNEL_VMA = 0xC0000000;
+KERNEL_LMA = 0x10000;
 
 SECTIONS
 {
-	. = 0x10000;
+    . = KERNEL_LMA;
+    __tramp_phys_start = .;
 
-	.text : ALIGN(4K)
-	{
-        *(.text.start)
-		*(.text)
-	}
+    .tramp : {
+        KEEP(*(.tramp.entry))
+        *(.tramp.text)
+        *(.tramp.rodata)
+        *(.tramp.data)
+        *(.tramp.bss)
+        . = ALIGN(4K);
+    }
+    __tramp_phys_end = .;
 
-	.rodata : ALIGN(4K)
-	{
-		*(.rodata*)
-	}
+    __kernel_lma_start = __tramp_phys_end;
+    
+    . = KERNEL_VMA + __kernel_lma_start;
 
-	.data : ALIGN(4K)
-	{
-		*(.data)
-	}
+    .text : AT(__kernel_lma_start) ALIGN(4K)
+    {
+        *(.text)
+        *(.text.*)
+    }
 
-	.bss : ALIGN(4K)
-	{
-		*(.bss*)
-	}
+    .rodata : AT(ADDR(.rodata) - KERNEL_VMA) ALIGN(4K)
+    {
+        *(.rodata*)
+    }
 
-	.stack : ALIGN(4K)
-	{
-		__stack_bottom = .;
-		. = . + 0x80000; /* 32 KiB should be fine for now, will manage in C later */
-		__stack_top = .;
-	}
+    .data : AT(ADDR(.data) - KERNEL_VMA) ALIGN(4K)
+    {
+        *(.data)
+    }
 
-	PROVIDE(__hh_phys = __hh_lma + (hh_kernel - KERNEL_VMA));
-	
-	/* --- Higher-half kernel entry --- */
-	__hh_lma = ALIGN(LOADADDR(.data) + SIZEOF(.data), 0x1000);
+    .bss : AT(ADDR(.bss) - KERNEL_VMA) ALIGN(4K)
+    {
+        *(.bss*)
+        *(COMMON)
+    }
 
-	.text.hh KERNEL_VMA : AT(__hh_lma)
-	{
-		KEEP(*(.text.hh))             /* put hh_kernel here */
-		PROVIDE(__hh_kernel = hh_kernel); /* export its virtual address */
-	}
+    .stack : AT(ADDR(.stack) - KERNEL_VMA) ALIGN(4K)
+    {
+        __stack_bottom = .;
+        . = . + 0x8000; 
+        __stack_top = .;
+    }
+
+    __kernel_phys_end = ADDR(.stack) + SIZEOF(.stack) - KERNEL_VMA;
 }

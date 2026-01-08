@@ -10,10 +10,10 @@ extern void hh_kernel(void); // the function (VMA ~ 0xC0……)
 void kernel_low() {
     clear_screen();
     kprint("Interrupts have been set up\n");
-    init_paging();
-    kprint("Paging has been initialized\n");
-    enable_paging(page_directory);
-    kprint("Paging has been enabled\n");
+    // init_paging();
+    // kprint("Paging has been initialized\n");
+    // enable_paging(page_directory);
+    // kprint("Paging has been enabled\n");
     // void *jmp_hh_kernel = (void*)(0xC0000000 + kernel_main); // Address of high half kernel
     asm volatile("jmp *%0" :: "r"(hh_kernel));
     while(1);
