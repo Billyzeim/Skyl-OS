@@ -24,4 +24,8 @@ void tramp_putudec(uint32_t v);
 // Entry point for the tramp print test
 void tramp(void);
 
+#define KERNEL_VIRTUAL_BASE 0xC0000000
+#define V2P(addr) ((uintptr_t)(addr) - KERNEL_VIRTUAL_BASE)
+#define P2V(addr) ((uintptr_t)(addr) + KERNEL_VIRTUAL_BASE)
+
 #endif // TRAMP_H

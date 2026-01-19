@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <tramp.h>
 
 #define VGA_MEM   ((volatile uint16_t*)0xB8000)
 #define VGA_COLS  80
@@ -67,6 +68,7 @@ TRAMP_DATA uint32_t boot_page_directory[1024] __attribute__((aligned(4096)));
 extern void enable_paging(uint32_t pd_phys_addr);
 extern void kernel_init(void);
 
+
 TRAMP_TEXT void tramp(void) {
     tramp_cx = 0; tramp_cy = 0;
     tramp_clear_screen();
@@ -76,7 +78,8 @@ TRAMP_TEXT void tramp(void) {
     uint32_t entry_flags = 0x83;
 
     boot_page_directory[0] = (0x00000000 | entry_flags);
-    boot_page_directory[768] = (0x00000000 | entry_flags);
+    boot_page_directory[768] = (0x00000000 | entry_flags); // 768 = 0xC0000000 / (4MB)
+    boot_page_directory[1023] = (int)boot_page_directory | 0x03;
 
     // tramp_puts("Enabling Paging Hardware...\n");
     enable_paging((uint32_t)boot_page_directory);

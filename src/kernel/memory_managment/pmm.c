@@ -1,10 +1,10 @@
 #include <stdint.h>
-#include <allocators.h>
-
-typedef unsigned int size_t;
+#include <paging.h>
+#include <terminal_io.h>
 
 #define PAGE_SIZE 4096
 #define BITMAP_SIZE_BYTES (64 * 1024 * 1024 / PAGE_SIZE / 8)  // 64MiB / 4KiB / 8 = 2048 bytes
+#define BITMAP_SIZE_BITS  (BITMAP_SIZE_BYTES * 8)
 
 static uint8_t physical_bitmap[BITMAP_SIZE_BYTES];
 
@@ -12,8 +12,8 @@ static uint8_t physical_bitmap[BITMAP_SIZE_BYTES];
 #define BITMAP_SET(bitmap, index) (bitmap[(index) / 8] |= (1 << ((index) % 8)))
 #define BITMAP_CLEAR(bitmap, index) (bitmap[(index) / 8] &= ~(1 << ((index) % 8)))
 
-void* alloc_page() {
-    for (uint32_t i = 0; i < BITMAP_SIZE_BYTES * 8; i++) {
+void *find_available_page() {
+    for (uint32_t i = 1; i < BITMAP_SIZE_BITS; i++) {
         if (!BITMAP_GET(physical_bitmap, i)) {
             BITMAP_SET(physical_bitmap, i);
             return (void*)(i * PAGE_SIZE);
